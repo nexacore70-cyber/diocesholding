@@ -1,0 +1,121 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    font-family:
+      Inter, Manrope, ui-sans-serif, system-ui, -apple-system,
+      BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+    color: #080808;
+    background: #ffffff;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    background: #ffffff;
+  }
+
+  body {
+    min-width: 320px;
+    min-height: 100vh;
+    margin: 0;
+    overflow-x: hidden;
+    background: #ffffff;
+  }
+
+  body,
+  button,
+  input,
+  textarea,
+  select {
+    font-family: inherit;
+  }
+
+  button,
+  a {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  a {
+    text-decoration: none;
+  }
+
+  button {
+    cursor: pointer;
+  }
+
+  img,
+  video {
+    display: block;
+    max-width: 100%;
+  }
+}
+
+::selection {
+  color: #ffffff;
+  background: #dc2626;
+}
+
+@keyframes heroMediaEnter {
+  from {
+    opacity: 0;
+    transform: scale(1.035);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.hero-media-enter {
+  animation: heroMediaEnter 900ms ease-out both;
+}
+
+@media (max-height: 700px) and (min-width: 1024px) {
+  #home {
+    min-height: 700px;
+  }
+
+  #home > div.relative {
+    min-height: 700px;
+    padding-top: 110px;
+    padding-bottom: 85px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+main,
+section {
+  width: 100%;
+}
