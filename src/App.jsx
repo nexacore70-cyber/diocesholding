@@ -9,8 +9,11 @@ import Contact from "./pages/Contact";
 import PlatformPages, {
   platformPagePaths,
 } from "./pages/PlatformPages";
-import StudentDashboard from "./pages/student/StudentDashboard";
+import CourseCatalog from "./pages/CourseCatalog";
 
+import StudentPortal, {
+  isStudentPortalPath,
+} from "./pages/student/StudentPortal";
 
 const navigationLinks = [
   { label: "Academy", href: "#academy" },
@@ -1348,8 +1351,12 @@ export default function App() {
     return <Login />;
   }
 
-  if (currentPath === "/student/dashboard") {
-    return <StudentDashboard />;
+  if (isStudentPortalPath(currentPath)) {
+    return <StudentPortal />;
+  }
+
+  if (currentPath === "/courses") {
+    return <CourseCatalog />;
   }
 
   if (currentPath === "/about") {

@@ -1,4 +1,17 @@
 import { useEffect, useState } from "react";
+import {
+  CURRENCY_OPTIONS,
+  STORAGE_KEYS,
+  beginStudentEnrollment,
+  courseCategories,
+  defaultProfile,
+  detectPreferredCurrency,
+  formatCurrency,
+  getCourse,
+  getCoursePrice,
+  saveStoredValue,
+  setPreferredCurrency,
+} from "./student/studentData";
 
 const accountRoles = [
   {
@@ -123,10 +136,24 @@ const learningOptions = [
 ];
 
 function getInitialRole() {
-  const roleFromUrl = new URLSearchParams(window.location.search).get("role");
+  const searchParams = new URLSearchParams(window.location.search);
+  const roleFromUrl = searchParams.get("role");
+  const courseFromUrl = Number(searchParams.get("course"));
   const roleExists = accountRoles.some((role) => role.id === roleFromUrl);
 
+  if (getCourse(courseFromUrl)) {
+    return "student";
+  }
+
   return roleExists ? roleFromUrl : "student";
+}
+
+function getInitialStudentCourse() {
+  const courseId = Number(
+    new URLSearchParams(window.location.search).get("course"),
+  );
+
+  return getCourse(courseId);
 }
 
 function ArrowIcon({ className = "h-5 w-5" }) {
@@ -325,16 +352,24 @@ function GitHubIcon() {
 }
 
 export default function CreateAccount() {
+  const initialStudentCourse = getInitialStudentCourse();
+
   const [selectedRole, setSelectedRole] = useState(getInitialRole);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [currency, setCurrency] = useState(
+    detectPreferredCurrency,
+  );
 
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
     email: "",
     phone: "",
-    roleDetail: "",
+    courseCategory: initialStudentCourse?.categoryId || "",
+    roleDetail: initialStudentCourse
+      ? String(initialStudentCourse.id)
+      : "",
     password: "",
     confirmPassword: "",
     agree: false,
@@ -344,12 +379,27 @@ export default function CreateAccount() {
     accountRoles.find((role) => role.id === selectedRole) ||
     accountRoles[0];
 
+  const selectedCategory = courseCategories.find(
+    (category) => category.id === formData.courseCategory,
+  );
+
+  const selectedStudentCourse =
+    selectedRole === "student"
+      ? getCourse(formData.roleDetail)
+      : null;
+
   useEffect(() => {
     const currentUrl = new URL(window.location.href);
     currentUrl.searchParams.set("role", selectedRole);
 
     window.history.replaceState({}, "", currentUrl);
   }, [selectedRole]);
+
+  const handleCurrencyChange = (event) => {
+    const nextCurrency = event.target.value;
+    setCurrency(nextCurrency);
+    setPreferredCurrency(nextCurrency);
+  };
 
   const handleChange = (event) => {
     const { name, value, type, checked } = event.target;
@@ -365,6 +415,15 @@ export default function CreateAccount() {
 
     setFormData((current) => ({
       ...current,
+      courseCategory: "",
+      roleDetail: "",
+    }));
+  };
+
+  const handleCourseCategoryChange = (event) => {
+    setFormData((current) => ({
+      ...current,
+      courseCategory: event.target.value,
       roleDetail: "",
     }));
   };
@@ -378,7 +437,9 @@ export default function CreateAccount() {
     }
 
     if (!formData.agree) {
-      alert("Please accept the Terms of Service and Privacy Policy.");
+      alert(
+        "Please accept the Terms of Service and Privacy Policy.",
+      );
       return;
     }
 
@@ -388,6 +449,28 @@ export default function CreateAccount() {
     };
 
     console.log("Registration data:", registrationData);
+
+    if (selectedRole === "student") {
+      const selectedCourse = getCourse(formData.roleDetail);
+
+      if (!selectedCourse) {
+        alert(
+          "Please select a learning category and the course you want to register for.",
+        );
+        return;
+      }
+
+      saveStoredValue(STORAGE_KEYS.profile, {
+        ...defaultProfile,
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        email: formData.email.trim(),
+        phone: formData.phone.trim(),
+      });
+
+      beginStudentEnrollment(selectedCourse.id);
+      return;
+    }
 
     alert(`${activeRole.submitLabel} form submitted successfully.`);
   };
@@ -758,49 +841,208 @@ export default function CreateAccount() {
                         />
                       </div>
 
-                      {/* ROLE-SPECIFIC FIELD */}
-                      <div className="sm:col-span-2">
-                        <label
-                          htmlFor="roleDetail"
-                          className="mb-2 block text-sm font-black text-neutral-800"
-                        >
-                          {activeRole.detailLabel}
-                        </label>
+                      {/* ROLE-SPECIFIC FIELDS */}
+                      {selectedRole === "student" ? (
+                        <>
+                          <div>
+                            <label
+                              htmlFor="courseCategory"
+                              className="mb-2 block text-sm font-black text-neutral-800"
+                            >
+                              Learning category
+                            </label>
 
-                        {selectedRole === "student" ||
-                        selectedRole === "tutor" ||
-                        selectedRole === "talent" ? (
-                          <select
-                            id="roleDetail"
-                            name="roleDetail"
-                            value={formData.roleDetail}
-                            onChange={handleChange}
-                            required
-                            className={`h-14 w-full rounded-2xl border border-neutral-300 bg-white px-4 text-sm text-neutral-950 outline-none transition focus:ring-4 ${activeRole.focusClass}`}
-                          >
-                            <option value="">
-                              {activeRole.detailPlaceholder}
-                            </option>
-
-                            {learningOptions.map((option) => (
-                              <option key={option} value={option}>
-                                {option}
+                            <select
+                              id="courseCategory"
+                              name="courseCategory"
+                              value={formData.courseCategory}
+                              onChange={handleCourseCategoryChange}
+                              required
+                              className={`h-14 w-full rounded-2xl border border-neutral-300 bg-white px-4 text-sm text-neutral-950 outline-none transition focus:ring-4 ${activeRole.focusClass}`}
+                            >
+                              <option value="">
+                                Select a learning category
                               </option>
-                            ))}
-                          </select>
-                        ) : (
-                          <input
-                            id="roleDetail"
-                            name="roleDetail"
-                            type="text"
-                            value={formData.roleDetail}
-                            onChange={handleChange}
-                            placeholder={activeRole.detailPlaceholder}
-                            required
-                            className={`h-14 w-full rounded-2xl border border-neutral-300 bg-white px-4 text-sm text-neutral-950 outline-none transition placeholder:text-neutral-400 focus:ring-4 ${activeRole.focusClass}`}
-                          />
-                        )}
-                      </div>
+
+                              {courseCategories.map((category) => (
+                                <option
+                                  key={category.id}
+                                  value={category.id}
+                                >
+                                  {category.name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+
+                          <div>
+                            <label
+                              htmlFor="roleDetail"
+                              className="mb-2 block text-sm font-black text-neutral-800"
+                            >
+                              Course to register for
+                            </label>
+
+                            <select
+                              id="roleDetail"
+                              name="roleDetail"
+                              value={formData.roleDetail}
+                              onChange={handleChange}
+                              required
+                              disabled={!selectedCategory}
+                              className={`h-14 w-full rounded-2xl border border-neutral-300 bg-white px-4 text-sm text-neutral-950 outline-none transition focus:ring-4 disabled:cursor-not-allowed disabled:bg-neutral-100 disabled:text-neutral-400 ${activeRole.focusClass}`}
+                            >
+                              <option value="">
+                                {selectedCategory
+                                  ? "Select a course"
+                                  : "Select a category first"}
+                              </option>
+
+                              {selectedCategory?.courses.map(
+                                (course) => (
+                                  <option
+                                    key={course.id}
+                                    value={course.id}
+                                  >
+                                    {course.title}
+                                  </option>
+                                ),
+                              )}
+                            </select>
+                          </div>
+
+                          {selectedStudentCourse && (
+                            <div className="sm:col-span-2 overflow-hidden rounded-[24px] border border-red-200 bg-red-50">
+                              <div className="p-5">
+                                <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+                                  <div>
+                                    <p className="text-xs font-black uppercase tracking-[0.16em] text-red-600">
+                                      Selected programme
+                                    </p>
+
+                                    <h3 className="mt-2 text-xl font-black text-neutral-950">
+                                      {selectedStudentCourse.title}
+                                    </h3>
+
+                                    <p className="mt-2 text-sm leading-6 text-neutral-600">
+                                      {selectedStudentCourse.category} ·{" "}
+                                      {selectedStudentCourse.duration} ·{" "}
+                                      {selectedStudentCourse.lessons.length}{" "}
+                                      in-depth modules
+                                    </p>
+
+                                    <p className="mt-2 text-xs font-bold text-neutral-500">
+                                      {selectedStudentCourse.priceTierLabel}
+                                    </p>
+                                  </div>
+
+                                  <div className="sm:text-right">
+                                    <select
+                                      value={currency}
+                                      onChange={handleCurrencyChange}
+                                      className="h-11 rounded-full border border-red-200 bg-white px-4 text-xs font-black text-neutral-700 outline-none focus:border-red-600"
+                                      aria-label="Select tuition currency"
+                                    >
+                                      {CURRENCY_OPTIONS.map((option) => (
+                                        <option
+                                          key={option.code}
+                                          value={option.code}
+                                        >
+                                          {option.code}
+                                        </option>
+                                      ))}
+                                    </select>
+
+                                    <p className="mt-3 text-2xl font-black text-red-600">
+                                      {formatCurrency(
+                                        getCoursePrice(
+                                          selectedStudentCourse,
+                                          currency,
+                                        ),
+                                        currency,
+                                      )}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <details className="border-t border-red-200 bg-white">
+                                <summary className="cursor-pointer px-5 py-4 text-sm font-black text-neutral-950">
+                                  View the full curriculum before registration
+                                </summary>
+
+                                <div className="grid gap-3 px-5 pb-5 md:grid-cols-2">
+                                  {selectedStudentCourse.lessons.map(
+                                    (lesson) => (
+                                      <article
+                                        key={lesson.id}
+                                        className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4"
+                                      >
+                                        <p className="text-[10px] font-black uppercase tracking-[0.12em] text-red-600">
+                                          Module {lesson.module}
+                                        </p>
+                                        <h4 className="mt-2 text-sm font-black text-neutral-950">
+                                          {lesson.title}
+                                        </h4>
+                                        <p className="mt-2 text-xs leading-6 text-neutral-500">
+                                          {lesson.description}
+                                        </p>
+                                      </article>
+                                    ),
+                                  )}
+                                </div>
+                              </details>
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <div className="sm:col-span-2">
+                          <label
+                            htmlFor="roleDetail"
+                            className="mb-2 block text-sm font-black text-neutral-800"
+                          >
+                            {activeRole.detailLabel}
+                          </label>
+
+                          {selectedRole === "tutor" ||
+                          selectedRole === "talent" ? (
+                            <select
+                              id="roleDetail"
+                              name="roleDetail"
+                              value={formData.roleDetail}
+                              onChange={handleChange}
+                              required
+                              className={`h-14 w-full rounded-2xl border border-neutral-300 bg-white px-4 text-sm text-neutral-950 outline-none transition focus:ring-4 ${activeRole.focusClass}`}
+                            >
+                              <option value="">
+                                {activeRole.detailPlaceholder}
+                              </option>
+
+                              {learningOptions.map((option) => (
+                                <option
+                                  key={option}
+                                  value={option}
+                                >
+                                  {option}
+                                </option>
+                              ))}
+                            </select>
+                          ) : (
+                            <input
+                              id="roleDetail"
+                              name="roleDetail"
+                              type="text"
+                              value={formData.roleDetail}
+                              onChange={handleChange}
+                              placeholder={
+                                activeRole.detailPlaceholder
+                              }
+                              required
+                              className={`h-14 w-full rounded-2xl border border-neutral-300 bg-white px-4 text-sm text-neutral-950 outline-none transition placeholder:text-neutral-400 focus:ring-4 ${activeRole.focusClass}`}
+                            />
+                          )}
+                        </div>
+                      )}
 
                       <div>
                         <label

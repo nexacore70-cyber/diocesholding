@@ -1,4 +1,7 @@
 import { useState } from "react";
+import {
+  getStudentLandingPath,
+} from "./student/studentData";
 
 function ArrowIcon({ className = "h-5 w-5" }) {
   return (
@@ -146,18 +149,25 @@ export default function Login() {
     }));
   };
 
- const handleSubmit = (event) => {
-  event.preventDefault();
+  const handleSubmit = (event) => {
+    event.preventDefault();
 
-  const loginData = {
-    ...formData,
-    selectedRole,
+    const loginData = {
+      ...formData,
+      selectedRole,
+    };
+
+    console.log("Login details:", loginData);
+
+    if (selectedRole === "student") {
+      window.location.href = getStudentLandingPath();
+      return;
+    }
+
+    alert(
+      `Logging in as ${selectedRole}. Backend authentication comes next.`,
+    );
   };
-
-  console.log("Login details:", loginData);
-
-  alert(`Logging in as ${selectedRole}. Backend authentication comes next.`);
-};
 
   const handleSocialLogin = (provider) => {
     alert(`${provider} login is ready for backend OAuth integration.`);
@@ -410,9 +420,6 @@ export default function Login() {
 </div>
 
 <div className="my-8 h-px bg-neutral-200" />
-
-{/* SOCIAL LOGIN */}
-<div className="grid gap-3 sm:grid-cols-3"></div>
 
                   {/* SOCIAL LOGIN */}
                   <div className="mt-8 grid gap-3 sm:grid-cols-3">
