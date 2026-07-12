@@ -9,6 +9,9 @@ export const CLIENT_STORAGE_KEYS = {
   files: "nexacore_client_files_v1",
 };
 
+export const TALENT_PUBLIC_PROFILE_STORAGE_KEY =
+  "nexacore_talent_public_profiles_v1";
+
 export const CLIENT_DEPOSIT_PERCENT = 25;
 export const CLIENT_FINAL_PERCENT = 75;
 export const TALENT_PAYOUT_PERCENT = 80;
@@ -20,7 +23,7 @@ export const serviceCategories = [
     title: "Software Development",
     description:
       "Web applications, mobile products, APIs, testing and complete software delivery.",
-    image: "/images/hero/sd.png",
+    image: "/images/hero/banner1.png",
     services: [
       "Full Stack Development",
       "Frontend Development",
@@ -37,7 +40,7 @@ export const serviceCategories = [
     title: "Data and AI",
     description:
       "Analytics, dashboards, machine learning, automation and intelligent business systems.",
-    image: "/images/hero/da.png",
+    image: "/images/hero/banner2.png",
     services: [
       "Data Analysis",
       "Data Science",
@@ -54,7 +57,7 @@ export const serviceCategories = [
     title: "Cybersecurity",
     description:
       "Security reviews, risk assessments, cloud protection and compliance support.",
-    image: "/images/hero/cy.png",
+    image: "/images/hero/banner3.png",
     services: [
       "Security Assessment",
       "Network Security",
@@ -69,7 +72,7 @@ export const serviceCategories = [
     title: "Design and Product",
     description:
       "UI/UX, research, product strategy, graphic design and complete design systems.",
-    image: "/images/hero/ux.png",
+    image: "/images/hero/banner4.png",
     services: [
       "UI/UX Design",
       "Product Design",
@@ -103,7 +106,7 @@ export const serviceCategories = [
     title: "Business and Digital",
     description:
       "Digital growth, project operations, virtual assistance and technology sales.",
-    image: "/images/hero/dm.png",
+    image: "/images/hero/banner3.png",
     services: [
       "Digital Marketing",
       "Social Media Management",
@@ -592,9 +595,41 @@ export function getServiceCategory(categoryId) {
 }
 
 export function getTalentProfile(talentId) {
-  return talentProfiles.find(
+  const builtInProfile = talentProfiles.find(
     (talent) => talent.id === talentId,
   );
+
+  let publishedProfile = null;
+
+  try {
+    const registry = JSON.parse(
+      window.localStorage.getItem(
+        TALENT_PUBLIC_PROFILE_STORAGE_KEY,
+      ) || "{}",
+    );
+
+    publishedProfile = registry[talentId] || null;
+  } catch {
+    publishedProfile = null;
+  }
+
+  if (!publishedProfile) {
+    return builtInProfile;
+  }
+
+  return {
+    ...(builtInProfile || {}),
+    ...publishedProfile,
+    id: talentId,
+    portfolio:
+      publishedProfile.portfolio?.length > 0
+        ? publishedProfile.portfolio
+        : builtInProfile?.portfolio || [],
+    reviews:
+      publishedProfile.reviews?.length > 0
+        ? publishedProfile.reviews
+        : builtInProfile?.reviews || [],
+  };
 }
 
 export function getProject(projects, projectId) {

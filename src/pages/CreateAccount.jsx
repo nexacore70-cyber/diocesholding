@@ -18,6 +18,9 @@ import {
 import {
   beginClientAccount,
 } from "./client/clientData";
+import {
+  beginTalentAccount,
+} from "./talent/talentData";
 
 const accountRoles = [
   {
@@ -501,6 +504,17 @@ export default function CreateAccount() {
   return;
 }
 
+if (selectedRole === "talent") {
+  beginTalentAccount({
+    firstName: formData.firstName,
+    lastName: formData.lastName,
+    email: formData.email,
+    phone: formData.phone,
+    professionalSkill: formData.roleDetail,
+  });
+
+  return;
+}
     alert(`${activeRole.submitLabel} form submitted successfully.`);
   };
 

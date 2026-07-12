@@ -8,6 +8,9 @@ import {
 import {
   getClientLandingPath,
 } from "./client/clientData";
+import {
+  getTalentLandingPath,
+} from "./talent/talentData";
 
 function ArrowIcon({ className = "h-5 w-5" }) {
   return (
@@ -177,6 +180,11 @@ export default function Login() {
 
     if (selectedRole === "client") {
   window.location.href = getClientLandingPath();
+  return;
+}
+
+    if (selectedRole === "talent") {
+  window.location.href = getTalentLandingPath();
   return;
 }
 
