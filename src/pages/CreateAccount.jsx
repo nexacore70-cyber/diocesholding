@@ -15,6 +15,9 @@ import {
 import {
   beginTutorApplication,
 } from "./tutor/tutorData";
+import {
+  beginClientAccount,
+} from "./client/clientData";
 
 const accountRoles = [
   {
@@ -485,6 +488,18 @@ export default function CreateAccount() {
       });
       return;
     }
+
+    if (selectedRole === "client") {
+  beginClientAccount({
+    firstName: formData.firstName,
+    lastName: formData.lastName,
+    email: formData.email,
+    phone: formData.phone,
+    companyName: formData.roleDetail,
+  });
+
+  return;
+}
 
     alert(`${activeRole.submitLabel} form submitted successfully.`);
   };
