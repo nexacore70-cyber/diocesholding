@@ -2,6 +2,9 @@ import { useState } from "react";
 import {
   getStudentLandingPath,
 } from "./student/studentData";
+import {
+  getTutorLandingPath,
+} from "./tutor/tutorData";
 
 function ArrowIcon({ className = "h-5 w-5" }) {
   return (
@@ -161,6 +164,11 @@ export default function Login() {
 
     if (selectedRole === "student") {
       window.location.href = getStudentLandingPath();
+      return;
+    }
+
+    if (selectedRole === "tutor") {
+      window.location.href = getTutorLandingPath();
       return;
     }
 

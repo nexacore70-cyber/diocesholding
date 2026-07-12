@@ -12,6 +12,9 @@ import {
   saveStoredValue,
   setPreferredCurrency,
 } from "./student/studentData";
+import {
+  beginTutorApplication,
+} from "./tutor/tutorData";
 
 const accountRoles = [
   {
@@ -469,6 +472,17 @@ export default function CreateAccount() {
       });
 
       beginStudentEnrollment(selectedCourse.id);
+      return;
+    }
+
+    if (selectedRole === "tutor") {
+      beginTutorApplication({
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        phone: formData.phone,
+        courseTitle: formData.roleDetail,
+      });
       return;
     }
 
@@ -1018,14 +1032,36 @@ export default function CreateAccount() {
                                 {activeRole.detailPlaceholder}
                               </option>
 
-                              {learningOptions.map((option) => (
-                                <option
-                                  key={option}
-                                  value={option}
-                                >
-                                  {option}
-                                </option>
-                              ))}
+                              {selectedRole === "tutor"
+                                ? courseCategories.map(
+                                    (category) => (
+                                      <optgroup
+                                        key={category.id}
+                                        label={category.name}
+                                      >
+                                        {category.courses.map(
+                                          (course) => (
+                                            <option
+                                              key={course.id}
+                                              value={course.title}
+                                            >
+                                              {course.title}
+                                            </option>
+                                          ),
+                                        )}
+                                      </optgroup>
+                                    ),
+                                  )
+                                : learningOptions.map(
+                                    (option) => (
+                                      <option
+                                        key={option}
+                                        value={option}
+                                      >
+                                        {option}
+                                      </option>
+                                    ),
+                                  )}
                             </select>
                           ) : (
                             <input
