@@ -17,6 +17,9 @@ import StudentPortal, {
 import TutorPortal, {
   isTutorPortalPath,
 } from "./pages/tutor/TutorPortal";
+import ClientPortal, {
+  isClientPortalPath,
+} from "./pages/client/ClientPortal";
 
 const navigationLinks = [
   { label: "Academy", href: "#academy" },
@@ -1360,6 +1363,10 @@ export default function App() {
 
 if (isTutorPortalPath(currentPath)) {
   return <TutorPortal />;
+}
+
+if (isClientPortalPath(currentPath)) {
+  return <ClientPortal />;
 }
 
   if (currentPath === "/courses") {

@@ -5,6 +5,9 @@ import {
 import {
   getTutorLandingPath,
 } from "./tutor/tutorData";
+import {
+  getClientLandingPath,
+} from "./client/clientData";
 
 function ArrowIcon({ className = "h-5 w-5" }) {
   return (
@@ -171,6 +174,11 @@ export default function Login() {
       window.location.href = getTutorLandingPath();
       return;
     }
+
+    if (selectedRole === "client") {
+  window.location.href = getClientLandingPath();
+  return;
+}
 
     alert(
       `Logging in as ${selectedRole}. Backend authentication comes next.`,
