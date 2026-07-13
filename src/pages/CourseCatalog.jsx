@@ -9,24 +9,26 @@ import {
   setPreferredCurrency,
 } from "./student/studentData";
 
-function ArrowIcon({ className = "h-5 w-5" }) {
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      aria-hidden="true"
-    >
-      <path
-        d="M5 12h14M13 6l6 6-6 6"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
+  function ArrowIcon({
+    className = "",
+  }) {
+    return (
+      <svg
+        className={`h-5 w-5 shrink-0 ${className}`}
+        viewBox="0 0 24 24"
+        fill="none"
+        aria-hidden="true"
+      >
+        <path
+          d="M5 12h14M13 6l6 6-6 6"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    );
+  }
 
 function SearchIcon() {
   return (
@@ -125,7 +127,7 @@ export default function CourseCatalog() {
   );
 
   return (
-    <main className="min-h-screen bg-[#f5f5f5] text-neutral-950">
+    <main className="min-h-screen bg-[#f5f5f5] text-neutral-950 dark:bg-neutral-950 dark:text-white">
       <header className="sticky top-0 z-40 border-b border-neutral-200 bg-white/95 backdrop-blur-xl">
         <div className="mx-auto flex h-[88px] max-w-[1500px] items-center justify-between gap-5 px-5 sm:px-8 lg:px-12">
           <a href="/" className="inline-flex">
@@ -201,21 +203,21 @@ export default function CourseCatalog() {
               NexaCore Academy
             </p>
 
-            <h1 className="mt-5 text-4xl font-black leading-[1.03] tracking-[-0.04em] text-white sm:text-5xl lg:text-7xl">
-              Deep practical education across
-              <span className="block text-red-500">
-                technology, creative media and professional skills.
-              </span>
-            </h1>
+              <h1 className="mt-5 max-w-5xl text-4xl font-black leading-[1.08] tracking-[-0.035em] text-white sm:text-5xl lg:text-6xl">
+                Deep practical education across technology,
+                creative media and{" "}
+                <span className="text-red-500">
+                  professional skills.
+                </span>
+              </h1>
 
-            <p className="mt-6 max-w-3xl text-base leading-8 text-white/65 sm:text-lg">
-              Explore {totalCourses} structured programmes across{" "}
-              {courseCategories.length} categories. Every course
-              contains ten in-depth modules, live tutor sessions,
-              practical assignments and a portfolio-ready capstone.
-              Curriculum previews are open before registration, while
-              lesson completion tools unlock after payment.
-            </p>
+                <p className="mt-6 max-w-3xl text-base leading-8 text-white/75 sm:text-lg">
+                  Explore {totalCourses} structured programmes across{" "}
+                  {courseCategories.length} professional categories.
+                  Every course includes ten in-depth modules, live tutor
+                  sessions, practical assignments and a portfolio-ready
+                  capstone project.
+                </p>
 
             <div className="mt-7 flex flex-wrap gap-3">
               <span className="rounded-full border border-white/15 bg-white/[0.06] px-4 py-2 text-xs font-black text-white/70">
@@ -323,7 +325,7 @@ export default function CourseCatalog() {
                     return (
                       <article
                         key={course.id}
-                        className="overflow-hidden rounded-[28px] border border-neutral-200 bg-white shadow-sm"
+                        className="overflow-hidden rounded-[28px] border border-neutral-200 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-900"
                       >
                         <div className="relative h-[230px] overflow-hidden">
                           <img
@@ -407,7 +409,7 @@ export default function CourseCatalog() {
                                     <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-red-50 text-red-600">
                                       <CheckIcon />
                                     </span>
-                                    <p className="text-sm leading-6 text-neutral-600">
+                                    <p className="text-sm leading-6 text-neutral-600 dark:text-neutral-300">
                                       {outcome}
                                     </p>
                                   </div>

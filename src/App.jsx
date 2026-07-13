@@ -23,9 +23,27 @@ import ClientPortal, {
 import TalentPortal, {
   isTalentPortalPath,
 } from "./pages/talent/TalentPortal";
+import ProgramsPortal, {
+  isProgramsPath,
+} from "./pages/programs/ProgramsPortal";
+import {
+  lazy,
+  Suspense,
+} from "react";
+import {
+  ForgotPassword,
+  ResetPassword,
+} from "./pages/PasswordRecovery";
+
+
+const AdminPortal = lazy(() =>
+  import("./pages/admin/AdminPortal"),
+);
 
 const navigationLinks = [
   { label: "Academy", href: "#academy" },
+  { label: "Bootcamps", href: "/bootcamp" },
+  { label: "Internships", href: "/internship" },
   { label: "Categories", href: "#categories" },
   { label: "Who it's for", href: "#participants" },
   { label: "How it works", href: "/how-it-works" },
@@ -58,65 +76,73 @@ const categories = [
     code: "SD",
     title: "Software Development",
     description:
-      "Frontend, backend, full stack, mobile applications, APIs and software testing.",
+      "Frontend development, backend development, full stack engineering, mobile apps, APIs and software testing.",
     image: "/images/hero/sd.png",
-    href: "/courses/software-development",
+    href: "/courses?category=software-development#course-categories",
   },
   {
     code: "DA",
-    title: "Data and Analytics",
+    title: "Data and AI",
     description:
-      "Data analysis, Power BI, Excel, SQL, Python, business intelligence and reporting.",
+      "Data analysis, Excel, SQL, Power BI, Python, machine learning, AI automation and business intelligence.",
     image: "/images/hero/da.png",
-    href: "/courses/data-analytics",
-  },
-  {
-    code: "AI",
-    title: "Artificial Intelligence",
-    description:
-      "Machine learning, AI automation, prompt engineering, NLP and intelligent systems.",
-    image: "/images/hero/ai.png",
-    href: "/courses/artificial-intelligence",
+    href: "/courses?category=data-ai#course-categories",
   },
   {
     code: "CY",
     title: "Cybersecurity",
     description:
-      "Ethical hacking, GRC, security operations, network security and data privacy.",
+      "Ethical hacking, security operations, network security, data privacy, GRC and incident response.",
     image: "/images/hero/cy.png",
-    href: "/courses/cybersecurity",
-  },
-  {
-    code: "UX",
-    title: "Design and Product",
-    description:
-      "UI/UX design, product design, research, Figma, design systems and product strategy.",
-    image: "/images/hero/ux.png",
-    href: "/courses/design-product",
+    href: "/courses?category=cybersecurity#course-categories",
   },
   {
     code: "CD",
     title: "Cloud and DevOps",
     description:
-      "AWS, Azure, Docker, Kubernetes, Linux, deployment and CI/CD pipelines.",
+      "AWS, Azure, Linux, Docker, Kubernetes, CI/CD pipelines, cloud architecture and deployment.",
     image: "/images/hero/cd.png",
-    href: "/courses/cloud-devops",
+    href: "/courses?category=cloud-devops#course-categories",
   },
   {
-    code: "DM",
-    title: "Digital Business",
+    code: "DP",
+    title: "Design and Product",
     description:
-      "Digital marketing, social media, SEO, virtual assistance and technology sales.",
+      "UI/UX design, product design, Figma, user research, prototyping, design systems and product strategy.",
+    image: "/images/hero/ux.png",
+    href: "/courses?category=design-product#course-categories",
+  },
+  {
+    code: "BD",
+    title: "Business and Digital",
+    description:
+      "Digital marketing, social media management, SEO, virtual assistance, technology sales and online business.",
     image: "/images/hero/dm.png",
-    href: "/courses/digital-business",
+    href: "/courses?category=business-digital#course-categories",
   },
   {
-    code: "PM",
-    title: "Project Management",
+    code: "ES",
+    title: "Emerging Skills",
     description:
-      "Agile, Scrum, technology project coordination, documentation and delivery tracking.",
+      "Prompt engineering, blockchain, no-code development, automation, robotics and emerging technologies.",
+    image: "/images/hero/ai.png",
+    href: "/courses?category=emerging-skills#course-categories",
+  },
+  {
+    code: "CM",
+    title: "Videography and Creative Media",
+    description:
+      "Video editing, AI video production, cinematography, animation, motion graphics, VFX and sound production.",
+    image: "/images/hero/banner4.png",
+    href: "/courses?category=creative-media#course-categories",
+  },
+  {
+    code: "PS",
+    title: "Professional and Soft Skills",
+    description:
+      "Communication, leadership, project management, critical thinking, teamwork, career readiness and personal branding.",
     image: "/images/hero/pm.png",
-    href: "/courses/project-management",
+    href: "/courses?category=professional-skills#course-categories",
   },
 ];
 
@@ -382,7 +408,7 @@ function Navbar() {
           )}
         </a>
 
-        <nav className="hidden items-center gap-8 lg:flex">
+        <nav className="hidden items-center gap-5 lg:flex">
           {navigationLinks.map((item) => (
             <a
               key={item.label}
@@ -774,7 +800,7 @@ function CategoriesSection() {
   return (
     <section
       id="categories"
-      className="scroll-mt-24 bg-[#f5f5f5] py-20 sm:py-28"
+      className="scroll-mt-24 bg-[#f5f5f5] py-20 dark:bg-neutral-950 sm:py-28"
     >
       <div className="mx-auto w-full max-w-[1440px] px-5 sm:px-8 lg:px-12">
         {/* CENTRED HEADING */}
@@ -787,8 +813,8 @@ function CategoriesSection() {
 
         <div className="mt-8 flex justify-center">
           <a
-            href="#categories"
-            className="group inline-flex items-center gap-3 rounded-full border border-neutral-300 bg-white px-6 py-3.5 text-sm font-black text-neutral-950 transition hover:border-neutral-950 hover:bg-neutral-950 hover:text-white"
+            href="/courses#course-categories"
+            className="group inline-flex items-center gap-3 rounded-full border border-neutral-300 bg-white px-6 py-3.5 text-sm font-black text-neutral-950 transition hover:border-neutral-950 hover:bg-neutral-950 hover:text-white dark:border-neutral-700 dark:bg-neutral-900 dark:text-white dark:hover:bg-red-600"
           >
             View every category
 
@@ -802,7 +828,7 @@ function CategoriesSection() {
           {categories.map((category) => (
             <article
               key={category.code}
-              className="group flex h-full flex-col overflow-hidden rounded-[28px] border border-neutral-200 bg-white shadow-sm transition duration-500 hover:-translate-y-2 hover:border-red-200 hover:shadow-[0_25px_70px_rgba(0,0,0,0.13)]"
+              className="group flex h-full flex-col overflow-hidden rounded-[28px] border border-neutral-200 bg-white shadow-sm transition duration-500 hover:-translate-y-2 hover:border-red-500 hover:shadow-[0_25px_70px_rgba(0,0,0,0.13)] dark:border-neutral-800 dark:bg-neutral-900"
             >
               <div className="relative h-[235px] overflow-hidden bg-neutral-900">
                 <img
@@ -831,13 +857,13 @@ function CategoriesSection() {
               </div>
 
               <div className="flex flex-1 flex-col p-6">
-                <p className="text-sm leading-7 text-neutral-600">
+                <p className="text-sm leading-7 text-neutral-600 dark:text-neutral-300">
                   {category.description}
                 </p>
 
                 <a
                   href={category.href}
-                  className="group/link mt-auto inline-flex items-center gap-3 pt-7 text-sm font-black text-red-600 transition hover:text-neutral-950"
+                  className="group/link mt-auto inline-flex items-center gap-3 pt-7 text-sm font-black text-red-600 transition hover:text-neutral-950 dark:hover:text-white"
                 >
                   Explore category
 
@@ -1197,9 +1223,10 @@ function Footer() {
     title: "Academy",
     links: [
       { label: "Browse courses", href: "/courses" },
+      { label: "Bootcamps", href: "/bootcamp" },
+      { label: "Internships", href: "/internship" },
       { label: "Find tutors", href: "/tutors" },
       { label: "Certificates", href: "/certificates" },
-      { label: "Student projects", href: "/student-projects" },
     ],
   },
   {
@@ -1359,6 +1386,35 @@ export default function App() {
   if (currentPath === "/login") {
     return <Login />;
   }
+
+  if (currentPath === "/forgot-password") {
+    return <ForgotPassword />;
+  }
+
+  if (currentPath === "/reset-password") {
+    return <ResetPassword />;
+  }
+
+  if (
+  currentPath === "/admin" ||
+  currentPath.startsWith("/admin/")
+) {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-neutral-950 text-white">
+          Loading private control center...
+        </div>
+      }
+    >
+      <AdminPortal />
+    </Suspense>
+  );
+}
+
+  if (isProgramsPath(currentPath)) {
+  return <ProgramsPortal />;
+}
 
   if (isStudentPortalPath(currentPath)) {
   return <StudentPortal />;

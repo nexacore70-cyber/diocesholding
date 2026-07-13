@@ -14,6 +14,7 @@ import {
   saveTutorValue,
   tutorHasWorkspaceAccess,
 } from "./tutorData";
+import ThemeToggle from "../../theme/ThemeToggle";
 
 export function isTutorPortalPath(pathname) {
   return (

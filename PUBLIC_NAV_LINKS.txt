@@ -1,0 +1,15 @@
+PUBLIC HEADER LINKS
+
+<a
+  href="/bootcamp"
+  className="text-sm font-black text-neutral-600 hover:text-red-600 dark:text-neutral-300"
+>
+  Bootcamps
+</a>
+
+<a
+  href="/internship"
+  className="text-sm font-black text-neutral-600 hover:text-red-600 dark:text-neutral-300"
+>
+  Internships
+</a>

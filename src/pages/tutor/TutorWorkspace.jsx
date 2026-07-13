@@ -21,6 +21,7 @@ import {
   saveTutorValue,
   tutorCourses,
 } from "./tutorData";
+import ThemeToggle from "../../theme/ThemeToggle";
 
 const tutorNavigation = [
   { label: "Overview", href: "/tutor/dashboard", icon: "home" },
@@ -162,6 +163,7 @@ function TutorShell({ title, profile, children, requestCount, gradingCount }) {
 
       <header className="sticky top-0 z-30 border-b border-neutral-200 bg-white/95 backdrop-blur-xl">
         <div className="flex h-[88px] items-center justify-between gap-4 px-5 sm:px-8 lg:px-10">
+          <ThemeToggle placement="inline" />
           <div className="flex min-w-0 items-center gap-4">
             <button type="button" onClick={() => setMenuOpen((value) => !value)} className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border ${menuOpen ? "border-red-600 bg-red-600 text-white" : "border-neutral-200 bg-white hover:border-red-600 hover:text-red-600"}`}><Icon name={menuOpen ? "close" : "menu"} className="h-6 w-6" /></button>
             <a href="/" className="hidden sm:inline-flex"><img src="/images/logo/nexacore-logo-light.png" alt="NexaCore" className="h-11 w-auto max-w-[170px] object-contain" /></a>
