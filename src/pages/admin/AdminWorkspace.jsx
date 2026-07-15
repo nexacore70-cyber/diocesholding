@@ -21,7 +21,7 @@ import {
   hasAdminPermission,
   writeAuditLog,
 } from "./adminData";
-import ThemeToggle from "../../theme/ThemeToggle";
+import SiteSettingsMenu from "../../components/common/SiteSettingsMenu";
 
 const navItems = [
   {

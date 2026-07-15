@@ -139,9 +139,50 @@ const loginRoles = [
   },
 ];
 
+
+function getSafeNextPath(
+  value,
+  fallback = "/member/dashboard",
+) {
+  if (
+    value &&
+    value.startsWith("/") &&
+    !value.startsWith("//")
+  ) {
+    return value;
+  }
+
+  return fallback;
+}
+
 export default function Login() {
-  const [selectedRole, setSelectedRole] = useState("student");  
-  const [showPassword, setShowPassword] = useState(false);
+  const params = new URLSearchParams(
+    window.location.search,
+  );
+
+  const programmeMode =
+    params.get("mode") === "programme";
+
+  const programmeType =
+    params.get("programme") === "internship"
+      ? "internship"
+      : "bootcamp";
+
+  const nextPath = getSafeNextPath(
+    params.get("next"),
+    `/programs/${programmeType}/apply`,
+  );
+
+  const programmeSignupHref =
+    `/signup?mode=programme&programme=${programmeType}&next=${encodeURIComponent(
+      nextPath,
+    )}`;
+
+  const [selectedRole, setSelectedRole] =
+    useState("student");
+
+  const [showPassword, setShowPassword] =
+    useState(false);
 
   const [formData, setFormData] = useState({
     email: "",
@@ -159,39 +200,57 @@ export default function Login() {
   };
 
   const handleSubmit = (event) => {
-    event.preventDefault();
+  event.preventDefault();
 
-    const loginData = {
-      ...formData,
-      selectedRole,
-    };
-
-    console.log("Login details:", loginData);
-
-    if (selectedRole === "student") {
-      window.location.href = getStudentLandingPath();
-      return;
-    }
-
-    if (selectedRole === "tutor") {
-      window.location.href = getTutorLandingPath();
-      return;
-    }
-
-    if (selectedRole === "client") {
-  window.location.href = getClientLandingPath();
-  return;
-}
-
-    if (selectedRole === "talent") {
-  window.location.href = getTalentLandingPath();
-  return;
-}
-
-    alert(
-      `Logging in as ${selectedRole}. Backend authentication comes next.`,
+  if (programmeMode) {
+    window.sessionStorage.setItem(
+      "nexacore_programme_session_v1",
+      JSON.stringify({
+        email: formData.email.trim(),
+        programmeType,
+        authenticatedAt:
+          new Date().toISOString(),
+      }),
     );
+
+    window.location.href = nextPath;
+    return;
+  }
+
+  const loginData = {
+    ...formData,
+    selectedRole,
   };
+
+  console.log(
+    "Login details:",
+    loginData,
+  );
+
+  alert(
+    `Logging in as ${selectedRole}. Backend authentication comes next.`,
+  );
+
+  if (selectedRole === "student") {
+    window.location.href =
+      getStudentLandingPath();
+    return;
+  }
+
+  if (selectedRole === "tutor") {
+    window.location.href = "/tutor";
+    return;
+  }
+
+  if (selectedRole === "client") {
+    window.location.href = "/client";
+    return;
+  }
+
+  if (selectedRole === "talent") {
+    window.location.href = "/talent";
+  }
+};
 
   const handleSocialLogin = (provider) => {
     alert(`${provider} login is ready for backend OAuth integration.`);
@@ -237,7 +296,11 @@ export default function Login() {
               </span>
 
               <a
-                href="/signup"
+                href={
+                  programmeMode
+                    ? programmeSignupHref
+                    : "/signup"
+                }
                 className="rounded-full bg-red-600 px-5 py-3 text-sm font-black text-white transition hover:bg-white hover:text-red-600"
               >
                 Create account
@@ -352,10 +415,15 @@ export default function Login() {
                       </p>
 
                       <a
-                        href="/signup"
+                        href={
+                          programmeMode
+                            ? programmeSignupHref
+                            : "/signup"
+                        }
                         className="group mt-4 inline-flex items-center gap-3 font-black text-white transition hover:text-red-400"
                       >
                         Create your account
+
                         <ArrowIcon className="h-4 w-4 transition group-hover:translate-x-1" />
                       </a>
                     </div>
@@ -380,71 +448,80 @@ export default function Login() {
                   </div>
 
                   {/* ACCOUNT TYPE */}
-<div className="mt-8">
-  <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-    <div>
-      <p className="text-sm font-black text-neutral-900">
-        Choose your account type
-      </p>
+                {!programmeMode && (
+                  <>
+                    {/* ACCOUNT TYPE */}
+                    <div className="mt-8">
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                        <div>
+                          <p className="text-sm font-black text-neutral-900">
+                            Choose your account type
+                          </p>
 
-      <p className="mt-1 text-sm text-neutral-500">
-        Select the dashboard you want to access.
-      </p>
-    </div>
+                          <p className="mt-1 text-sm text-neutral-500">
+                            Select the dashboard you want to access.
+                          </p>
+                        </div>
 
-    <span className="w-fit rounded-full bg-red-50 px-3 py-1.5 text-xs font-black capitalize text-red-600">
-      {selectedRole} login
-    </span>
-  </div>
+                        <span className="w-fit rounded-full bg-red-50 px-3 py-1.5 text-xs font-black capitalize text-red-600">
+                          {selectedRole} login
+                        </span>
+                      </div>
 
-  <div className="mt-4 grid gap-3 sm:grid-cols-2">
-    {loginRoles.map((role) => {
-      const isSelected = selectedRole === role.id;
+                      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                        {loginRoles.map((role) => {
+                          const isSelected =
+                            selectedRole === role.id;
 
-      return (
-        <button
-          key={role.id}
-          type="button"
-          onClick={() => setSelectedRole(role.id)}
-          className={`rounded-2xl border p-4 text-left transition-all duration-300 ${
-            isSelected
-              ? "border-red-600 bg-red-50 shadow-[0_10px_30px_rgba(220,38,38,0.1)]"
-              : "border-neutral-200 bg-white hover:border-neutral-400"
-          }`}
-        >
-          <div className="flex items-center justify-between gap-4">
-            <h3
-              className={`font-black ${
-                isSelected ? "text-red-600" : "text-neutral-950"
-              }`}
-            >
-              {role.title}
-            </h3>
+                          return (
+                            <button
+                              key={role.id}
+                              type="button"
+                              onClick={() =>
+                                setSelectedRole(role.id)
+                              }
+                              className={`rounded-2xl border p-4 text-left transition-all duration-300 ${
+                                isSelected
+                                  ? "border-red-600 bg-red-50 shadow-[0_10px_30px_rgba(220,38,38,0.1)]"
+                                  : "border-neutral-200 bg-white hover:border-neutral-400"
+                              }`}
+                            >
+                              <div className="flex items-center justify-between gap-4">
+                                <h3
+                                  className={`font-black ${
+                                    isSelected
+                                      ? "text-red-600"
+                                      : "text-neutral-950"
+                                  }`}
+                                >
+                                  {role.title}
+                                </h3>
 
-            <span
-              className={`flex h-5 w-5 items-center justify-center rounded-full border ${
-                isSelected
-                  ? "border-red-600 bg-red-600"
-                  : "border-neutral-300 bg-white"
-              }`}
-            >
-              {isSelected && (
-                <span className="h-2 w-2 rounded-full bg-white" />
-              )}
-            </span>
-          </div>
+                                <span
+                                  className={`flex h-5 w-5 items-center justify-center rounded-full border ${
+                                    isSelected
+                                      ? "border-red-600 bg-red-600"
+                                      : "border-neutral-300 bg-white"
+                                  }`}
+                                >
+                                  {isSelected && (
+                                    <span className="h-2 w-2 rounded-full bg-white" />
+                                  )}
+                                </span>
+                              </div>
 
-          <p className="mt-2 text-xs leading-5 text-neutral-500">
-            {role.description}
-          </p>
-        </button>
-      );
-    })}
-  </div>
-</div>
+                              <p className="mt-2 text-xs leading-5 text-neutral-500">
+                                {role.description}
+                              </p>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
 
-<div className="my-8 h-px bg-neutral-200" />
-
+                    <div className="my-8 h-px bg-neutral-200" />
+                  </>
+                )}
                   {/* SOCIAL LOGIN */}
                   <div className="mt-8 grid gap-3 sm:grid-cols-3">
                     <button
@@ -570,7 +647,9 @@ export default function Login() {
                       type="submit"
                       className="group mt-7 inline-flex h-14 w-full items-center justify-center gap-3 rounded-2xl bg-red-600 px-6 text-sm font-black text-white shadow-[0_15px_45px_rgba(220,38,38,0.25)] transition duration-300 hover:-translate-y-0.5 hover:bg-neutral-950"
                     >
-                      Log in as {selectedRole}
+                      {programmeMode
+                        ? "Continue to programme application"
+                        : `Log in as ${selectedRole}`}
 
                       <ArrowIcon className="h-5 w-5 transition-transform group-hover:translate-x-1" />
                     </button>
@@ -578,7 +657,11 @@ export default function Login() {
                     <p className="mt-6 text-center text-sm text-neutral-500">
                       New to NexaCore?{" "}
                       <a
-                        href="/signup"
+                        href={
+                              programmeMode
+                                ? programmeSignupHref
+                                : "/signup"
+                            }
                         className="font-black text-red-600 transition hover:text-neutral-950"
                       >
                         Create an account

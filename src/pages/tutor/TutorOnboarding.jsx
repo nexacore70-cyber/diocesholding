@@ -17,7 +17,7 @@ import {
   recordTutorAssessmentFailure,
   scoreTutorAssessment,
 } from "./tutorData";
-import ThemeToggle from "../../theme/ThemeToggle";
+import SiteSettingsMenu from "../../components/common/SiteSettingsMenu";
 
 function ArrowIcon({ className = "h-5 w-5" }) {
   return (

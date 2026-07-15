@@ -1,5 +1,4 @@
 import ThemeProvider from "./ThemeProvider";
-import ThemeToggle from "./ThemeToggle";
 
 export default function ThemeLayer({
   children,
@@ -7,7 +6,6 @@ export default function ThemeLayer({
   return (
     <ThemeProvider>
       {children}
-      <ThemeToggle />
     </ThemeProvider>
   );
 }

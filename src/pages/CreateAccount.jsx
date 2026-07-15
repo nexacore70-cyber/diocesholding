@@ -157,6 +157,21 @@ function getInitialRole() {
   return roleExists ? roleFromUrl : "student";
 }
 
+function getSafeNextPath(
+      value,
+      fallback = "/member/dashboard",
+    ) {
+      if (
+        value &&
+        value.startsWith("/") &&
+        !value.startsWith("//")
+      ) {
+        return value;
+      }
+
+      return fallback;
+    }
+
 function getInitialStudentCourse() {
   const courseId = Number(
     new URLSearchParams(window.location.search).get("course"),
@@ -361,168 +376,265 @@ function GitHubIcon() {
 }
 
 export default function CreateAccount() {
-  const initialStudentCourse = getInitialStudentCourse();
-
-  const [selectedRole, setSelectedRole] = useState(getInitialRole);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [currency, setCurrency] = useState(
-    detectPreferredCurrency,
-  );
-
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-    courseCategory: initialStudentCourse?.categoryId || "",
-    roleDetail: initialStudentCourse
-      ? String(initialStudentCourse.id)
-      : "",
-    password: "",
-    confirmPassword: "",
-    agree: false,
-  });
-
-  const activeRole =
-    accountRoles.find((role) => role.id === selectedRole) ||
-    accountRoles[0];
-
-  const selectedCategory = courseCategories.find(
-    (category) => category.id === formData.courseCategory,
-  );
-
-  const selectedStudentCourse =
-    selectedRole === "student"
-      ? getCourse(formData.roleDetail)
-      : null;
-
-  useEffect(() => {
-    const currentUrl = new URL(window.location.href);
-    currentUrl.searchParams.set("role", selectedRole);
-
-    window.history.replaceState({}, "", currentUrl);
-  }, [selectedRole]);
-
-  const handleCurrencyChange = (event) => {
-    const nextCurrency = event.target.value;
-    setCurrency(nextCurrency);
-    setPreferredCurrency(nextCurrency);
-  };
-
-  const handleChange = (event) => {
-    const { name, value, type, checked } = event.target;
-
-    setFormData((current) => ({
-      ...current,
-      [name]: type === "checkbox" ? checked : value,
-    }));
-  };
-
-  const handleRoleChange = (roleId) => {
-    setSelectedRole(roleId);
-
-    setFormData((current) => ({
-      ...current,
-      courseCategory: "",
-      roleDetail: "",
-    }));
-  };
-
-  const handleCourseCategoryChange = (event) => {
-    setFormData((current) => ({
-      ...current,
-      courseCategory: event.target.value,
-      roleDetail: "",
-    }));
-  };
-
-  const handleSubmit = (event) => {
-    event.preventDefault();
-
-    if (formData.password !== formData.confirmPassword) {
-      alert("The passwords do not match.");
-      return;
-    }
-
-    if (!formData.agree) {
-      alert(
-        "Please accept the Terms of Service and Privacy Policy.",
+      const params = new URLSearchParams(
+        window.location.search,
       );
-      return;
-    }
 
-    const registrationData = {
-      ...formData,
-      role: selectedRole,
-    };
+      const programmeMode =
+        params.get("mode") === "programme";
 
-    console.log("Registration data:", registrationData);
+      const programmeType =
+        params.get("programme") === "internship"
+          ? "internship"
+          : "bootcamp";
 
-    if (selectedRole === "student") {
-      const selectedCourse = getCourse(formData.roleDetail);
+      const nextPath = getSafeNextPath(
+        params.get("next"),
+        `/programs/${programmeType}/apply`,
+      );
 
-      if (!selectedCourse) {
-        alert(
-          "Please select a learning category and the course you want to register for.",
+      const programmeLoginHref =
+        `/login?mode=programme&programme=${programmeType}&next=${encodeURIComponent(
+          nextPath,
+        )}`;
+
+      const initialStudentCourse =
+        getInitialStudentCourse();
+
+      const initialStudentCategory =
+        courseCategories.find((category) =>
+          category.courses.some(
+            (course) =>
+              course.id === initialStudentCourse?.id,
+          ),
+        ) || null;
+
+      const [selectedRole, setSelectedRole] =
+        useState(getInitialRole);
+
+      const [currency, setCurrency] =
+        useState(() =>
+          detectPreferredCurrency(),
         );
-        return;
-      }
 
-      saveStoredValue(STORAGE_KEYS.profile, {
-        ...defaultProfile,
-        firstName: formData.firstName.trim(),
-        lastName: formData.lastName.trim(),
-        email: formData.email.trim(),
-        phone: formData.phone.trim(),
+      const [showPassword, setShowPassword] =
+        useState(false);
+
+      const [
+        showConfirmPassword,
+        setShowConfirmPassword,
+      ] = useState(false);
+
+      const [formData, setFormData] = useState({
+        firstName: "",
+        lastName: "",
+        email: "",
+        phone: "",
+        courseCategory:
+          initialStudentCategory?.id || "",
+        roleDetail:
+          initialStudentCourse
+            ? String(initialStudentCourse.id)
+            : "",
+        password: "",
+        confirmPassword: "",
+        agree: false,
       });
 
-      beginStudentEnrollment(selectedCourse.id);
-      return;
-    }
+      const activeRole =
+        accountRoles.find(
+          (role) => role.id === selectedRole,
+        ) || accountRoles[0];
 
-    if (selectedRole === "tutor") {
-      beginTutorApplication({
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        phone: formData.phone,
-        courseTitle: formData.roleDetail,
-      });
-      return;
-    }
+      const selectedCategory =
+        courseCategories.find(
+          (category) =>
+            String(category.id) ===
+            String(formData.courseCategory),
+        ) || null;
 
-    if (selectedRole === "client") {
-  beginClientAccount({
-    firstName: formData.firstName,
-    lastName: formData.lastName,
-    email: formData.email,
-    phone: formData.phone,
-    companyName: formData.roleDetail,
-  });
+      const selectedStudentCourse =
+        getCourse(
+          Number(formData.roleDetail),
+        );
 
-  return;
-}
+      useEffect(() => {
+        /*
+        * Programme applicants do not use
+        * Student/Tutor/Client/Talent role selection.
+        */
+        if (programmeMode) {
+          return;
+        }
 
-if (selectedRole === "talent") {
-  beginTalentAccount({
-    firstName: formData.firstName,
-    lastName: formData.lastName,
-    email: formData.email,
-    phone: formData.phone,
-    professionalSkill: formData.roleDetail,
-  });
+        const currentUrl = new URL(
+          window.location.href,
+        );
 
-  return;
-}
-    alert(`${activeRole.submitLabel} form submitted successfully.`);
-  };
+        currentUrl.searchParams.set(
+          "role",
+          selectedRole,
+        );
 
-  const handleSocialSignup = (provider) => {
-    alert(
-      `${provider} signup is ready for backend OAuth integration.`,
-    );
-  };
+        window.history.replaceState(
+          {},
+          "",
+          currentUrl,
+        );
+      }, [selectedRole, programmeMode]);
+
+      const handleChange = (event) => {
+        const {
+          name,
+          value,
+          type,
+          checked,
+        } = event.target;
+
+        setFormData((current) => ({
+          ...current,
+          [name]:
+            type === "checkbox"
+              ? checked
+              : value,
+        }));
+      };
+
+      const handleCourseCategoryChange =
+        (event) => {
+          const courseCategory =
+            event.target.value;
+
+          setFormData((current) => ({
+            ...current,
+            courseCategory,
+            roleDetail: "",
+          }));
+        };
+
+      const handleCurrencyChange =
+        (event) => {
+          const nextCurrency =
+            event.target.value;
+
+          setCurrency(nextCurrency);
+          setPreferredCurrency(nextCurrency);
+        };
+
+      const handleRoleChange = (roleId) => {
+        setSelectedRole(roleId);
+
+        setFormData((current) => ({
+          ...current,
+          courseCategory: "",
+          roleDetail: "",
+        }));
+      };
+
+      const handleSubmit = (event) => {
+        event.preventDefault();
+
+        if (
+          formData.password !==
+          formData.confirmPassword
+        ) {
+          alert(
+            "The passwords do not match.",
+          );
+          return;
+        }
+
+        if (!formData.agree) {
+          alert(
+            "Please accept the Terms of Service and Privacy Policy.",
+          );
+          return;
+        }
+
+        /*
+        * BOOTCAMP OR INTERNSHIP REGISTRATION
+        */
+        if (programmeMode) {
+          saveStoredValue(
+            STORAGE_KEYS.profile,
+            {
+              ...defaultProfile,
+              firstName:
+                formData.firstName.trim(),
+              lastName:
+                formData.lastName.trim(),
+              email: formData.email.trim(),
+              phone: formData.phone.trim(),
+            },
+          );
+
+          window.sessionStorage.setItem(
+            "nexacore_programme_session_v1",
+            JSON.stringify({
+              firstName:
+                formData.firstName.trim(),
+              lastName:
+                formData.lastName.trim(),
+              email: formData.email.trim(),
+              programmeType,
+              authenticatedAt:
+                new Date().toISOString(),
+            }),
+          );
+
+          window.location.href = nextPath;
+          return;
+        }
+
+        /*
+        * NORMAL ROLE REGISTRATION
+        */
+        const registrationData = {
+          ...formData,
+          role: selectedRole,
+        };
+
+        console.log(
+          "Registration data:",
+          registrationData,
+        );
+
+        if (selectedRole === "student") {
+          const selectedCourseId =
+            Number(formData.roleDetail) || 1;
+
+          beginStudentEnrollment(
+            selectedCourseId,
+          );
+
+          window.location.href =
+            "/student/dashboard";
+
+          return;
+        }
+
+        if (selectedRole === "tutor") {
+          window.location.href = "/tutor";
+          return;
+        }
+
+        if (selectedRole === "client") {
+          window.location.href = "/client";
+          return;
+        }
+
+        if (selectedRole === "talent") {
+          window.location.href = "/talent";
+        }
+      };
+
+      const handleSocialSignup = (
+        provider,
+      ) => {
+        alert(
+          `${provider} signup is ready for backend OAuth integration.`,
+        );
+      };
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-neutral-950">
@@ -563,7 +675,11 @@ if (selectedRole === "talent") {
               </span>
 
               <a
-                href="/login"
+                href={
+                    programmeMode
+                      ? programmeLoginHref
+                      : "/login"
+                  }
                 className="rounded-full bg-white px-5 py-3 text-sm font-black text-neutral-950 transition hover:bg-red-600 hover:text-white"
               >
                 Log in
@@ -610,57 +726,61 @@ if (selectedRole === "talent") {
         {/* REGISTRATION AREA */}
         <section className="px-5 pb-16 sm:px-8 sm:pb-24 lg:px-12">
           <div className="mx-auto max-w-[1280px]">
-            {/* ROLE CARDS */}
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {accountRoles.map((role) => {
-                const isSelected = selectedRole === role.id;
+            {!programmeMode && (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {accountRoles.map((role) => {
+                  const isSelected =
+                    selectedRole === role.id;
 
-                return (
-                  <button
-                    key={role.id}
-                    type="button"
-                    onClick={() => handleRoleChange(role.id)}
-                    className={`group relative overflow-hidden rounded-[26px] border p-6 text-left text-white backdrop-blur-xl transition duration-300 hover:-translate-y-1 ${
-                      isSelected
-                        ? role.accent
-                        : "border-white/15 bg-white/[0.07] hover:border-white/35 hover:bg-white/[0.12]"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div
-                        className={`flex h-12 w-12 items-center justify-center rounded-2xl ${
-                          isSelected
-                            ? "bg-white/20"
-                            : role.iconBackground
-                        }`}
-                      >
-                        <RoleIcon role={role.id} />
+                  return (
+                    <button
+                      key={role.id}
+                      type="button"
+                      onClick={() =>
+                        handleRoleChange(role.id)
+                      }
+                      className={`group relative overflow-hidden rounded-[26px] border p-6 text-left text-white backdrop-blur-xl transition duration-300 hover:-translate-y-1 ${
+                        isSelected
+                          ? role.accent
+                          : "border-white/15 bg-white/[0.07] hover:border-white/35 hover:bg-white/[0.12]"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div
+                          className={`flex h-12 w-12 items-center justify-center rounded-2xl ${
+                            isSelected
+                              ? "bg-white/20"
+                              : role.iconBackground
+                          }`}
+                        >
+                          <RoleIcon role={role.id} />
+                        </div>
+
+                        {isSelected && (
+                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-neutral-950">
+                            <CheckIcon />
+                          </div>
+                        )}
                       </div>
 
-                      {isSelected && (
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-neutral-950">
-                          <CheckIcon />
-                        </div>
-                      )}
-                    </div>
+                      <p className="mt-7 text-xs font-black uppercase tracking-[0.18em] text-white/60">
+                        {role.subtitle}
+                      </p>
 
-                    <p className="mt-7 text-xs font-black uppercase tracking-[0.18em] text-white/60">
-                      {role.subtitle}
-                    </p>
+                      <h2 className="mt-2 text-2xl font-black">
+                        {role.title}
+                      </h2>
 
-                    <h2 className="mt-2 text-2xl font-black">
-                      {role.title}
-                    </h2>
+                      <p className="mt-3 text-sm leading-6 text-white/65">
+                        {role.description}
+                      </p>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
 
-                    <p className="mt-3 text-sm leading-6 text-white/65">
-                      {role.description}
-                    </p>
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* MAIN GLASS CARD */}
+    {/* MAIN GLASS CARD */}
             <div className="mt-6 overflow-hidden rounded-[34px] border border-white/15 bg-white/95 shadow-[0_35px_120px_rgba(0,0,0,0.45)] backdrop-blur-2xl">
               <div className="grid lg:grid-cols-[0.78fr_1.22fr]">
                 {/* UNIQUE ROLE PANEL */}
@@ -885,7 +1005,9 @@ if (selectedRole === "talent") {
                       </div>
 
                       {/* ROLE-SPECIFIC FIELDS */}
-                      {selectedRole === "student" ? (
+                      {programmeMode
+                        ? null
+                        : selectedRole === "student" ? (
                         <>
                           <div>
                             <label
@@ -1222,7 +1344,9 @@ if (selectedRole === "talent") {
                       type="submit"
                       className={`group mt-7 inline-flex h-14 w-full items-center justify-center gap-3 rounded-2xl px-6 text-sm font-black text-white shadow-[0_15px_45px_rgba(0,0,0,0.16)] transition duration-300 hover:-translate-y-0.5 ${activeRole.buttonClass}`}
                     >
-                      {activeRole.submitLabel}
+                      {programmeMode
+                      ? "Create programme account"
+                      : activeRole.submitLabel}
 
                       <ArrowIcon className="h-5 w-5 transition-transform group-hover:translate-x-1" />
                     </button>
@@ -1230,7 +1354,11 @@ if (selectedRole === "talent") {
                     <p className="mt-6 text-center text-sm text-neutral-500">
                       Already have an account?{" "}
                       <a
-                        href="/login"
+                        href={
+                          programmeMode
+                            ? programmeLoginHref
+                            : "/login"
+                        }
                         className={`font-black ${activeRole.textAccent}`}
                       >
                         Log in here

@@ -8,7 +8,33 @@ import {
   internshipTracks,
   submitProgramApplication,
 } from "./programData";
-import ThemeToggle from "../../theme/ThemeToggle";
+import SiteSettingsMenu from "../../components/common/SiteSettingsMenu";
+
+const PROGRAMME_SESSION_KEY =
+      "nexacore_programme_session_v1";
+
+    function hasProgrammeAccess() {
+      try {
+        return Boolean(
+          window.sessionStorage.getItem(
+            PROGRAMME_SESSION_KEY,
+          ),
+        );
+      } catch {
+        return false;
+      }
+    }
+
+    function redirectToProgrammeAccess(type) {
+      const nextPath =
+        `${window.location.pathname}${window.location.search}`;
+
+      window.location.replace(
+        `/login?mode=programme&programme=${type}&next=${encodeURIComponent(
+          nextPath,
+        )}`,
+      );
+    }
 
 export function isProgramsPath(pathname) {
   return (
@@ -207,6 +233,26 @@ function Icon({
 
 function PublicHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const currentPath = window.location.pathname;
+
+    const programmeType =
+      currentPath.includes("internship")
+        ? "internship"
+        : "bootcamp";
+
+    const applicationPath =
+      programmeType === "internship"
+        ? "/programs/internship/apply"
+        : "/programs/bootcamp/apply";
+
+    const encodedApplicationPath =
+      encodeURIComponent(applicationPath);
+
+    const programmeLoginHref =
+      `/login?mode=programme&programme=${programmeType}&next=${encodedApplicationPath}`;
+
+    const programmeSignupHref =
+      `/signup?mode=programme&programme=${programmeType}&next=${encodedApplicationPath}`;
 
   return (
     <header className="sticky top-0 z-40 border-b border-neutral-200 bg-white/95 backdrop-blur-xl dark:border-neutral-800 dark:bg-neutral-950/95">
@@ -254,17 +300,20 @@ function PublicHeader() {
 
         <div className="hidden items-center gap-3 sm:flex">
           <a
-            href="/login"
+            href={programmeLoginHref}
             className="inline-flex h-11 items-center justify-center rounded-full border border-neutral-300 px-5 text-xs font-black text-neutral-800 hover:border-red-600 hover:text-red-600 dark:border-neutral-700 dark:text-white"
           >
             Sign in
           </a>
+
           <a
-            href="/signup"
+            href={programmeSignupHref}
             className="inline-flex h-11 items-center justify-center rounded-full bg-red-600 px-5 text-xs font-black text-white hover:bg-neutral-950"
           >
             Get started
           </a>
+
+          <SiteSettingsMenu />
         </div>
 
         <button
@@ -290,8 +339,8 @@ function PublicHeader() {
               ["Internships", "/internship"],
               ["Courses", "/courses"],
               ["Services", "/services"],
-              ["Sign in", "/login"],
-              ["Get started", "/signup"],
+              ["Sign in", programmeLoginHref],
+              ["Get started", programmeSignupHref],
             ].map(([label, href]) => (
               <a
                 key={href}
@@ -1000,8 +1049,15 @@ function ApplicationPage({ type }) {
       },
     );
 
-    window.location.href =
-      `/programs/application-success?type=${type}&id=${application.id}`;
+    window.sessionStorage.setItem(
+        "nexacore_latest_programme_application_v1",
+        JSON.stringify(application),
+      );
+
+      window.location.href =
+        `/member/dashboard?programme=${type}&applicationId=${encodeURIComponent(
+          application.id,
+        )}`;
   };
 
   const programmeFee =
@@ -1446,14 +1502,31 @@ export default function ProgramsPortal() {
   }
 
   if (path === "/programs/internship/apply") {
-    return <ApplicationPage type="internship" />;
+    if (!hasProgrammeAccess()) {
+      redirectToProgrammeAccess("internship");
+      return null;
+    }
+
+    return (
+      <ApplicationPage type="internship" />
+    );
   }
 
   if (path === "/programs/bootcamp/apply") {
-    return <ApplicationPage type="bootcamp" />;
+    if (!hasProgrammeAccess()) {
+      redirectToProgrammeAccess("bootcamp");
+      return null;
+    }
+
+    return (
+      <ApplicationPage type="bootcamp" />
+    );
   }
 
-  if (path === "/programs/application-success") {
+  if (
+    path ===
+    "/programs/application-success"
+  ) {
     return <ApplicationSuccessPage />;
   }
 

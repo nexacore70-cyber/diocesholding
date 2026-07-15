@@ -28,7 +28,7 @@ import {
   saveStoredValue,
   setPreferredCurrency,
 } from "./studentData";
-import ThemeToggle from "../../theme/ThemeToggle";
+import SiteSettingsMenu from "../../components/common/SiteSettingsMenu";
 
 const navigationItems = [
   { label: "Overview", href: "/student/dashboard", icon: "home" },
@@ -391,7 +391,6 @@ function StudentShell({
 
       <header className="sticky top-0 z-30 border-b border-neutral-200 bg-white/95 backdrop-blur-xl">
         <div className="flex h-[88px] items-center justify-between gap-4 px-5 sm:px-8 lg:px-10">
-          <ThemeToggle placement="inline" />
           <div className="flex min-w-0 items-center gap-4">
             <button
               type="button"

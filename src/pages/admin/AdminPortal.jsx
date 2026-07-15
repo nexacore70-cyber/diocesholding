@@ -35,7 +35,7 @@ import {
   AdminWorkspace,
   getAdminNavigation,
 } from "./AdminWorkspace";
-import ThemeToggle from "../../theme/ThemeToggle";
+import SiteSettingsMenu from "../../components/common/SiteSettingsMenu";
 
 export function isAdminPortalPath(pathname) {
   return (

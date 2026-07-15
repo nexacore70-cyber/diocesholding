@@ -34,6 +34,8 @@ import {
   ForgotPassword,
   ResetPassword,
 } from "./pages/PasswordRecovery";
+import MemberDashboard from "./pages/member/MemberDashboard";
+import SiteSettingsMenu from "./components/common/SiteSettingsMenu";
 
 
 const AdminPortal = lazy(() =>
@@ -434,6 +436,8 @@ function Navbar() {
           >
             Create account
           </a>
+
+          <SiteSettingsMenu />
         </div>
 
         <button
@@ -1377,7 +1381,8 @@ function LandingPage() {
 }
 
 export default function App() {
-  const currentPath = window.location.pathname;
+  const currentPath =
+    window.location.pathname;
 
   if (currentPath === "/signup") {
     return <CreateAccount />;
@@ -1412,9 +1417,15 @@ export default function App() {
   );
 }
 
+  if (
+    currentPath === "/member/dashboard"
+  ) {
+    return <MemberDashboard />;
+  }
+
   if (isProgramsPath(currentPath)) {
-  return <ProgramsPortal />;
-}
+    return <ProgramsPortal />;
+  }
 
   if (isStudentPortalPath(currentPath)) {
   return <StudentPortal />;
