@@ -248,7 +248,7 @@ export default function Contact() {
                     className="group mt-7 inline-flex h-14 w-full items-center justify-center gap-3 rounded-2xl bg-red-600 px-7 text-sm font-black text-white shadow-[0_15px_45px_rgba(220,38,38,0.25)] transition hover:-translate-y-0.5 hover:bg-neutral-950"
                   >
                     Send message
-                    <ArrowIcon className="transition group-hover:translate-x-1" />
+                    <ArrowIcon className="h-5 w-5 shrink-0 transition-transform duration-300 group-hover:translate-x-1" />
                   </button>
                 </form>
               </div>

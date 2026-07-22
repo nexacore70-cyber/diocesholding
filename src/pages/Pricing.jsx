@@ -75,7 +75,7 @@ export default function Pricing() {
       highlight="learning and professional growth."
       description="Choose the level of access that fits your current goals. Course fees and project payments remain separate from subscription plans."
     >
-      <section className="bg-[#f5f5f5] py-20 sm:py-28">
+      <section className="bg-[#f5f5f5] py-20 dark:bg-neutral-950 sm:py-28">
         <div className="mx-auto max-w-[1440px] px-5 sm:px-8 lg:px-12">
           <SectionHeading
             eyebrow="Choose your plan"
@@ -84,14 +84,14 @@ export default function Pricing() {
           />
 
           <div className="mt-9 flex justify-center">
-            <div className="flex rounded-full border border-neutral-200 bg-white p-1.5 shadow-sm">
+            <div className="flex rounded-full border border-neutral-200 bg-white p-1.5 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
               <button
                 type="button"
                 onClick={() => setBilling("monthly")}
                 className={`rounded-full px-6 py-3 text-sm font-black transition ${
                   billing === "monthly"
-                    ? "bg-neutral-950 text-white"
-                    : "text-neutral-500 hover:text-neutral-950"
+                    ? "bg-neutral-950 text-white dark:bg-white dark:text-neutral-950"
+                    : "text-neutral-500 hover:text-neutral-950 dark:text-neutral-300 dark:hover:text-white"
                 }`}
               >
                 Monthly
@@ -103,7 +103,7 @@ export default function Pricing() {
                 className={`rounded-full px-6 py-3 text-sm font-black transition ${
                   billing === "yearly"
                     ? "bg-red-600 text-white"
-                    : "text-neutral-500 hover:text-neutral-950"
+                    : "text-neutral-500 hover:text-neutral-950 dark:text-neutral-300 dark:hover:text-white"
                 }`}
               >
                 Yearly
@@ -118,7 +118,7 @@ export default function Pricing() {
                 className={`relative flex flex-col rounded-[32px] border p-7 sm:p-9 ${
                   plan.recommended
                     ? "border-red-600 bg-neutral-950 text-white shadow-[0_30px_80px_rgba(0,0,0,0.18)]"
-                    : "border-neutral-200 bg-white text-neutral-950"
+                    : "border-neutral-200 bg-white text-neutral-950 dark:border-neutral-800 dark:bg-neutral-900 dark:text-white"
                 }`}
               >
                 {plan.recommended && (
@@ -139,7 +139,7 @@ export default function Pricing() {
                   className={`mt-4 min-h-[72px] text-sm leading-7 ${
                     plan.recommended
                       ? "text-white/55"
-                      : "text-neutral-500"
+                      : "text-neutral-500 dark:text-neutral-300"
                   }`}
                 >
                   {plan.description}
@@ -165,7 +165,7 @@ export default function Pricing() {
                   className={`my-8 h-px ${
                     plan.recommended
                       ? "bg-white/10"
-                      : "bg-neutral-200"
+                      : "bg-neutral-200 dark:bg-neutral-800"
                   }`}
                 />
 
@@ -180,7 +180,7 @@ export default function Pricing() {
                         className={`text-sm leading-6 ${
                           plan.recommended
                             ? "text-white/70"
-                            : "text-neutral-600"
+                            : "text-neutral-600 dark:text-neutral-300"
                         }`}
                       >
                         {feature}
@@ -194,11 +194,11 @@ export default function Pricing() {
                   className={`group mt-9 inline-flex items-center justify-center gap-3 rounded-full px-6 py-4 text-sm font-black transition ${
                     plan.recommended
                       ? "bg-red-600 text-white hover:bg-white hover:text-red-600"
-                      : "bg-neutral-950 text-white hover:bg-red-600"
+                      : "bg-neutral-950 text-white hover:bg-red-600 dark:bg-white dark:text-neutral-950 dark:hover:bg-red-600 dark:hover:text-white"
                   }`}
                 >
                   {plan.button}
-                  <ArrowIcon className="transition group-hover:translate-x-1" />
+                  <ArrowIcon className="h-5 w-5 shrink-0 transition-transform duration-300 group-hover:translate-x-1" />
                 </a>
               </article>
             ))}
@@ -206,7 +206,7 @@ export default function Pricing() {
         </div>
       </section>
 
-      <section className="bg-white py-20 sm:py-28">
+      <section className="bg-white py-20 dark:bg-neutral-950 sm:py-28">
         <div className="mx-auto max-w-[1100px] px-5 sm:px-8">
           <SectionHeading
             eyebrow="Pricing information"
@@ -231,13 +231,13 @@ export default function Pricing() {
             ].map(([title, description]) => (
               <article
                 key={title}
-                className="rounded-[26px] border border-neutral-200 bg-[#f7f7f7] p-7 text-center"
+                className="rounded-[26px] border border-neutral-200 bg-[#f7f7f7] p-7 text-center dark:border-neutral-800 dark:bg-neutral-900"
               >
-                <h3 className="text-xl font-black text-neutral-950">
+                <h3 className="text-xl font-black text-neutral-950 dark:text-white">
                   {title}
                 </h3>
 
-                <p className="mt-4 text-sm leading-7 text-neutral-500">
+                <p className="mt-4 text-sm leading-7 text-neutral-500 dark:text-neutral-300">
                   {description}
                 </p>
               </article>

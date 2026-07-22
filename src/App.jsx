@@ -43,15 +43,42 @@ const AdminPortal = lazy(() =>
 );
 
 const navigationLinks = [
-  { label: "Academy", href: "#academy" },
-  { label: "Bootcamps", href: "/bootcamp" },
-  { label: "Internships", href: "/internship" },
-  { label: "Categories", href: "#categories" },
-  { label: "Who it's for", href: "#participants" },
-  { label: "How it works", href: "/how-it-works" },
-  { label: "Pricing", href: "/pricing" },
-  { label: "About", href: "/about" },
-  { label: "Contact", href: "/contact" },
+  {
+    label: "Academy",
+    href: "#academy",
+  },
+  {
+    label: "Bootcamps",
+    href: "/bootcamp",
+  },
+  {
+    label: "Internships",
+    href: "/internship",
+  },
+  {
+    label: "Categories",
+    href: "#categories",
+  },
+  {
+    label: "Who it's for",
+    href: "#participants",
+  },
+  {
+    label: "How it works",
+    href: "/how-it-works",
+  },
+  {
+    label: "Pricing",
+    href: "/pricing",
+  },
+  {
+    label: "About",
+    href: "/about",
+  },
+  {
+    label: "Contact",
+    href: "/contact",
+  },
 ];
 
 const trustItems = [
@@ -249,10 +276,12 @@ const hiringSteps = [
   },
 ];
 
-function ArrowIcon({ className = "h-5 w-5" }) {
+function ArrowIcon({ className = "" }) {
   return (
     <svg
-      className={className}
+      width="20"
+      height="20"
+      className={`shrink-0 ${className}`}
       viewBox="0 0 24 24"
       fill="none"
       aria-hidden="true"

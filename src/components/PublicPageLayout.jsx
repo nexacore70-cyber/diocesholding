@@ -1,7 +1,11 @@
-export function ArrowIcon({ className = "h-5 w-5" }) {
+export function ArrowIcon({
+  className = "",
+}) {
   return (
     <svg
-      className={className}
+      width="20"
+      height="20"
+      className={`shrink-0 ${className}`}
       viewBox="0 0 24 24"
       fill="none"
       aria-hidden="true"
