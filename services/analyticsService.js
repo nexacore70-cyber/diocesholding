@@ -1,3 +1,4 @@
+    const mongoose = require("mongoose");
     const User = require("../models/User");
     const Course = require("../models/Course");
     const Enrollment = require("../models/Enrollment");
@@ -739,8 +740,6 @@ const getNotifications = async () => {
     // ======================================
 // System Health
 // ======================================
-
-const mongoose = require("mongoose");
 
 const getSystemHealth = async () => {
   const database =
