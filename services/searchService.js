@@ -43,9 +43,7 @@ const searchCourses = async (query) => {
       },
       {
         tags: {
-          $in: [
-            new RegExp(keyword, "i"),
-          ],
+          $in: [new RegExp(keyword, "i")],
         },
       },
     ];
@@ -71,26 +69,22 @@ const searchCourses = async (query) => {
   }
 
   if (featured !== undefined) {
-    filter.isFeatured =
-      featured === "true";
+    filter.isFeatured = featured === "true";
   }
 
   if (isFree !== undefined) {
-    filter["pricing.isFree"] =
-      isFree === "true";
+    filter["pricing.isFree"] = isFree === "true";
   }
 
   if (minPrice || maxPrice) {
     filter["pricing.amount"] = {};
 
     if (minPrice) {
-      filter["pricing.amount"].$gte =
-        Number(minPrice);
+      filter["pricing.amount"].$gte = Number(minPrice);
     }
 
     if (maxPrice) {
-      filter["pricing.amount"].$lte =
-        Number(maxPrice);
+      filter["pricing.amount"].$lte = Number(maxPrice);
     }
   }
 
@@ -126,8 +120,7 @@ const searchCourses = async (query) => {
 
     case "popular":
       sortOption = {
-        "analytics.enrolledStudents":
-          -1,
+        "analytics.enrolledStudents": -1,
       };
       break;
 
@@ -140,27 +133,18 @@ const searchCourses = async (query) => {
   // ==========================
   // Pagination
   // ==========================
-  const currentPage =
-    Number(page) || 1;
+  const currentPage = Number(page) || 1;
 
-  const pageSize =
-    Number(limit) || 10;
+  const pageSize = Number(limit) || 10;
 
-  const skip =
-    (currentPage - 1) * pageSize;
+  const skip = (currentPage - 1) * pageSize;
 
-  const totalCourses =
-    await Course.countDocuments(filter);
+  const totalCourses = await Course.countDocuments(filter);
 
-  const totalPages = Math.ceil(
-    totalCourses / pageSize
-  );
+  const totalPages = Math.ceil(totalCourses / pageSize);
 
   const courses = await Course.find(filter)
-    .populate(
-      "tutor",
-      "firstName lastName profileImage"
-    )
+    .populate("tutor", "firstName lastName profileImage")
     .populate("category", "name")
     .sort(sortOption)
     .skip(skip)
@@ -168,8 +152,7 @@ const searchCourses = async (query) => {
 
   return {
     success: true,
-    message:
-      "Courses retrieved successfully.",
+    message: "Courses retrieved successfully.",
     data: courses,
 
     pagination: {
@@ -177,10 +160,8 @@ const searchCourses = async (query) => {
       limit: pageSize,
       totalCourses,
       totalPages,
-      hasNext:
-        currentPage < totalPages,
-      hasPrevious:
-        currentPage > 1,
+      hasNext: currentPage < totalPages,
+      hasPrevious: currentPage > 1,
     },
   };
 };

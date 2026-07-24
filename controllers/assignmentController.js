@@ -14,10 +14,7 @@ const {
 // @access Tutor/Admin
 const createNewAssignment = async (req, res) => {
   try {
-    const result = await createAssignment(
-      req.body,
-      req.user._id
-    );
+    const result = await createAssignment(req.body, req.user._id);
 
     return res.status(201).json(result);
   } catch (error) {
@@ -37,9 +34,7 @@ const createNewAssignment = async (req, res) => {
 // @access Authenticated
 const getAssignment = async (req, res) => {
   try {
-    const result = await getAssignmentById(
-      req.params.id
-    );
+    const result = await getAssignmentById(req.params.id);
 
     return res.status(200).json(result);
   } catch (error) {
@@ -57,21 +52,13 @@ const getAssignment = async (req, res) => {
 // =========================
 // @route GET /api/assignments/course/:courseId
 // @access Authenticated
-const getAssignmentsByCourse = async (
-  req,
-  res
-) => {
+const getAssignmentsByCourse = async (req, res) => {
   try {
-    const result = await getCourseAssignments(
-      req.params.courseId
-    );
+    const result = await getCourseAssignments(req.params.courseId);
 
     return res.status(200).json(result);
   } catch (error) {
-    console.error(
-      "Get Course Assignments Error:",
-      error
-    );
+    console.error("Get Course Assignments Error:", error);
 
     return res.status(500).json({
       success: false,
@@ -85,15 +72,9 @@ const getAssignmentsByCourse = async (
 // =========================
 // @route PUT /api/assignments/:id
 // @access Tutor/Admin
-const updateAssignmentDetails = async (
-  req,
-  res
-) => {
+const updateAssignmentDetails = async (req, res) => {
   try {
-    const result = await updateAssignment(
-      req.params.id,
-      req.body
-    );
+    const result = await updateAssignment(req.params.id, req.body);
 
     return res.status(200).json(result);
   } catch (error) {
@@ -113,9 +94,7 @@ const updateAssignmentDetails = async (
 // @access Tutor/Admin
 const removeAssignment = async (req, res) => {
   try {
-    const result = await deleteAssignment(
-      req.params.id
-    );
+    const result = await deleteAssignment(req.params.id);
 
     return res.status(200).json(result);
   } catch (error) {
@@ -133,14 +112,9 @@ const removeAssignment = async (req, res) => {
 // =========================
 // @route PATCH /api/assignments/:id/publish
 // @access Tutor/Admin
-const publishAssignmentNow = async (
-  req,
-  res
-) => {
+const publishAssignmentNow = async (req, res) => {
   try {
-    const result = await publishAssignment(
-      req.params.id
-    );
+    const result = await publishAssignment(req.params.id);
 
     return res.status(200).json(result);
   } catch (error) {

@@ -1,6 +1,4 @@
-const {
-  getDashboardAnalytics,
-} = require("../services/analyticsService");
+const { getDashboardAnalytics } = require("../services/analyticsService");
 
 // ======================================
 // Get Admin Dashboard
@@ -8,15 +6,11 @@ const {
 // ======================================
 const dashboard = async (req, res) => {
   try {
-    const result =
-      await getDashboardAnalytics();
+    const result = await getDashboardAnalytics();
 
     return res.status(200).json(result);
   } catch (error) {
-    console.error(
-      "Analytics Error:",
-      error
-    );
+    console.error("Analytics Error:", error);
 
     return res.status(500).json({
       success: false,

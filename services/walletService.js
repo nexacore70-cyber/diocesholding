@@ -3,10 +3,7 @@ const Wallet = require("../models/Wallet");
 // ======================================
 // Get or Create Wallet
 // ======================================
-const getOrCreateWallet = async (
-  owner,
-  ownerType = "student"
-) => {
+const getOrCreateWallet = async (owner, ownerType = "student") => {
   if (!owner) {
     throw new Error("Wallet owner is required.");
   }
@@ -46,21 +43,12 @@ const getOrCreateWallet = async (
 // ======================================
 // Credit Wallet
 // ======================================
-const creditWallet = async (
-  owner,
-  ownerType,
-  amount
-) => {
+const creditWallet = async (owner, ownerType, amount) => {
   if (amount <= 0) {
-    throw new Error(
-      "Credit amount must be greater than zero."
-    );
+    throw new Error("Credit amount must be greater than zero.");
   }
 
-  const wallet = await getOrCreateWallet(
-    owner,
-    ownerType
-  );
+  const wallet = await getOrCreateWallet(owner, ownerType);
 
   console.log("Balance Before:", wallet.availableBalance);
 
@@ -78,22 +66,15 @@ const creditWallet = async (
 // ======================================
 // Debit Wallet
 // ======================================
-const debitWallet = async (
-  owner,
-  amount
-) => {
+const debitWallet = async (owner, amount) => {
   if (amount <= 0) {
-    throw new Error(
-      "Debit amount must be greater than zero."
-    );
+    throw new Error("Debit amount must be greater than zero.");
   }
 
   const wallet = await getOrCreateWallet(owner);
 
   if (wallet.availableBalance < amount) {
-    throw new Error(
-      "Insufficient wallet balance."
-    );
+    throw new Error("Insufficient wallet balance.");
   }
 
   console.log("Balance Before:", wallet.availableBalance);
@@ -112,14 +93,8 @@ const debitWallet = async (
 // ======================================
 // Get Wallet
 // ======================================
-const getWallet = async (
-  owner,
-  ownerType = "student"
-) => {
-  const wallet = await getOrCreateWallet(
-    owner,
-    ownerType
-  );
+const getWallet = async (owner, ownerType = "student") => {
+  const wallet = await getOrCreateWallet(owner, ownerType);
 
   console.log("Wallet Retrieved:", wallet._id);
 

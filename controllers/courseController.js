@@ -14,10 +14,7 @@ const createNewCourse = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to create course.",
-      error:
-        process.env.NODE_ENV === "development"
-          ? error.message
-          : undefined,
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
 };

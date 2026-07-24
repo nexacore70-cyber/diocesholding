@@ -16,12 +16,7 @@ const enrollmentSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: [
-        "active",
-        "completed",
-        "cancelled",
-        "suspended",
-      ],
+      enum: ["active", "completed", "cancelled", "suspended"],
       default: "active",
     },
 
@@ -49,13 +44,10 @@ const enrollmentSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 // Prevent duplicate enrollment
-enrollmentSchema.index(
-  { student: 1, course: 1 },
-  { unique: true }
-);
+enrollmentSchema.index({ student: 1, course: 1 }, { unique: true });
 
 module.exports = mongoose.model("Enrollment", enrollmentSchema);

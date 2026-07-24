@@ -133,21 +133,16 @@ const submitQuiz = async (attemptId, studentId, answers) => {
     console.log("Question ID:", question._id.toString());
 
     const studentAnswer = answers.find(
-      (a) => a.questionId === question._id.toString()
+      (a) => a.questionId === question._id.toString(),
     );
 
     console.log("Matched Answer:", studentAnswer);
 
-    const selectedAnswer = studentAnswer
-      ? studentAnswer.answer
-      : "";
+    const selectedAnswer = studentAnswer ? studentAnswer.answer : "";
 
-    const isCorrect =
-      selectedAnswer === question.correctAnswer;
+    const isCorrect = selectedAnswer === question.correctAnswer;
 
-    const pointsAwarded = isCorrect
-      ? question.points
-      : 0;
+    const pointsAwarded = isCorrect ? question.points : 0;
 
     if (isCorrect) {
       earnedScore += question.points;
@@ -161,30 +156,27 @@ const submitQuiz = async (attemptId, studentId, answers) => {
     });
   }
 
-  const percentage =
-    totalScore === 0
-      ? 0
-      : (earnedScore / totalScore) * 100;
+  const percentage = totalScore === 0 ? 0 : (earnedScore / totalScore) * 100;
 
   const passed = percentage >= quiz.passingScore;
 
- // Save the quiz attempt
-attempt.answers = gradedAnswers;
-attempt.score = earnedScore;
-attempt.percentage = percentage;
-attempt.passed = passed;
-attempt.submittedAt = new Date();
-attempt.status = "submitted";
+  // Save the quiz attempt
+  attempt.answers = gradedAnswers;
+  attempt.score = earnedScore;
+  attempt.percentage = percentage;
+  attempt.passed = passed;
+  attempt.submittedAt = new Date();
+  attempt.status = "submitted";
 
-await attempt.save();
+  await attempt.save();
 
-return {
-  success: true,
-  message: "Quiz submitted successfully.",
-  data: attempt,
+  return {
+    success: true,
+    message: "Quiz submitted successfully.",
+    data: attempt,
+  };
+  module.exports = {
+    startQuiz,
+    submitQuiz,
+  };
 };
-module.exports = {
-  startQuiz,
-  submitQuiz,
-}
- };

@@ -22,14 +22,14 @@ router.post(
   "/quizzes/:quizId/start",
   protect,
   authorize("student"),
-  startQuizAttempt
+  startQuizAttempt,
 );
 
 router.post(
   "/:attemptId/submit",
   protect,
   authorize("student"),
-  submitQuizAttempt
+  submitQuizAttempt,
 );
 
 module.exports = router;

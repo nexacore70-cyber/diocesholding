@@ -30,16 +30,11 @@ router.post(
   "/initialize",
   protect,
   authorize("student"),
-  initializeStudentPayment
+  initializeStudentPayment,
 );
 
 // My Payments
-router.get(
-  "/my-payments",
-  protect,
-  authorize("student"),
-  getMyPayments
-);
+router.get("/my-payments", protect, authorize("student"), getMyPayments);
 
 // ======================================
 // Admin/Tutor Routes
@@ -50,15 +45,10 @@ router.patch(
   "/verify/:reference",
   protect,
   authorize("admin", "tutor"),
-  verifyStudentPayment
+  verifyStudentPayment,
 );
 
 // Get Payment By Reference
-router.get(
-  "/:reference",
-  protect,
-  authorize("admin", "tutor"),
-  getPayment
-);
+router.get("/:reference", protect, authorize("admin", "tutor"), getPayment);
 
 module.exports = router;

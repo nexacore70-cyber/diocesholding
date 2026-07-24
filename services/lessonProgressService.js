@@ -4,11 +4,7 @@ const Module = require("../models/Module");
 const Enrollment = require("../models/Enrollment");
 
 // Mark Lesson as Completed
-const completeLesson = async (
-  lessonId,
-  studentId,
-  watchPercentage = 100
-) => {
+const completeLesson = async (lessonId, studentId, watchPercentage = 100) => {
   // Find lesson
   const lesson = await Lesson.findById(lessonId);
 
@@ -45,13 +41,8 @@ const completeLesson = async (
   }
 
   // Video lessons require at least 90% watched
-  if (
-    lesson.lessonType === "video" &&
-    watchPercentage < 90
-  ) {
-    throw new Error(
-      "You must watch at least 90% of the lesson."
-    );
+  if (lesson.lessonType === "video" && watchPercentage < 90) {
+    throw new Error("You must watch at least 90% of the lesson.");
   }
 
   // Create or update lesson progress
@@ -84,20 +75,17 @@ const completeLesson = async (
   });
 
   // Count completed lessons
-  const completedLessons =
-    await LessonProgress.countDocuments({
-      student: studentId,
-      enrollment: enrollment._id,
-      completed: true,
-    });
+  const completedLessons = await LessonProgress.countDocuments({
+    student: studentId,
+    enrollment: enrollment._id,
+    completed: true,
+  });
 
   // Calculate progress percentage
   const progressPercentage =
     totalLessons === 0
       ? 0
-      : Math.round(
-          (completedLessons / totalLessons) * 100
-        );
+      : Math.round((completedLessons / totalLessons) * 100);
 
   // =====================================
   // Update Enrollment

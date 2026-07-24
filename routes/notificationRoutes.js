@@ -16,50 +16,30 @@ const router = express.Router();
 // Get My Notifications
 // GET /api/notifications
 // ======================================
-router.get(
-  "/",
-  protect,
-  getMyNotifications
-);
+router.get("/", protect, getMyNotifications);
 
 // ======================================
 // Get Unread Count
 // GET /api/notifications/unread-count
 // ======================================
-router.get(
-  "/unread-count",
-  protect,
-  getMyUnreadCount
-);
+router.get("/unread-count", protect, getMyUnreadCount);
 
 // ======================================
 // Mark One Notification as Read
 // PATCH /api/notifications/:id/read
 // ======================================
-router.patch(
-  "/:id/read",
-  protect,
-  markNotificationAsRead
-);
+router.patch("/:id/read", protect, markNotificationAsRead);
 
 // ======================================
 // Mark All Notifications as Read
 // PATCH /api/notifications/read-all
 // ======================================
-router.patch(
-  "/read-all",
-  protect,
-  markEveryNotificationAsRead
-);
+router.patch("/read-all", protect, markEveryNotificationAsRead);
 
 // ======================================
 // Delete Notification
 // DELETE /api/notifications/:id
 // ======================================
-router.delete(
-  "/:id",
-  protect,
-  removeNotification
-);
+router.delete("/:id", protect, removeNotification);
 
 module.exports = router;

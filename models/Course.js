@@ -115,13 +115,7 @@ const courseSchema = new mongoose.Schema(
     // Publishing
     status: {
       type: String,
-      enum: [
-        "draft",
-        "pending_review",
-        "published",
-        "unpublished",
-        "archived",
-      ],
+      enum: ["draft", "pending_review", "published", "unpublished", "archived"],
       default: "draft",
     },
 
@@ -203,7 +197,7 @@ const courseSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 module.exports = mongoose.model("Course", courseSchema);

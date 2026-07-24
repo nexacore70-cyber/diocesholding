@@ -28,11 +28,7 @@ const createNotification = async ({
 // ======================================
 // Get User Notifications
 // ======================================
-const getUserNotifications = async (
-  recipient,
-  page = 1,
-  limit = 20
-) => {
+const getUserNotifications = async (recipient, page = 1, limit = 20) => {
   const notifications = await Notification.find({
     recipient,
     isDeleted: false,
@@ -58,10 +54,7 @@ const getUnreadCount = async (recipient) => {
 // ======================================
 // Mark Notification as Read
 // ======================================
-const markAsRead = async (
-  notificationId,
-  recipient
-) => {
+const markAsRead = async (notificationId, recipient) => {
   return await Notification.findOneAndUpdate(
     {
       _id: notificationId,
@@ -73,7 +66,7 @@ const markAsRead = async (
     },
     {
       new: true,
-    }
+    },
   );
 };
 
@@ -89,7 +82,7 @@ const markAllAsRead = async (recipient) => {
     {
       isRead: true,
       readAt: new Date(),
-    }
+    },
   );
 
   return true;
@@ -98,10 +91,7 @@ const markAllAsRead = async (recipient) => {
 // ======================================
 // Soft Delete Notification
 // ======================================
-const deleteNotification = async (
-  notificationId,
-  recipient
-) => {
+const deleteNotification = async (notificationId, recipient) => {
   return await Notification.findOneAndUpdate(
     {
       _id: notificationId,
@@ -112,7 +102,7 @@ const deleteNotification = async (
     },
     {
       new: true,
-    }
+    },
   );
 };
 

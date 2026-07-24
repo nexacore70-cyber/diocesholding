@@ -27,27 +27,17 @@ router.get("/", getModules);
 router.get("/:id", getModule);
 
 // Update Module
-router.put(
-  "/:id",
-  protect,
-  authorize("tutor", "admin"),
-  updateExistingModule
-);
+router.put("/:id", protect, authorize("tutor", "admin"), updateExistingModule);
 
 // Delete Module
 router.delete(
   "/:id",
   protect,
   authorize("tutor", "admin"),
-  deleteExistingModule
+  deleteExistingModule,
 );
 
 // Create Module
-router.post(
-  "/",
-  protect,
-  authorize("tutor", "admin"),
-  createNewModule
-);
+router.post("/", protect, authorize("tutor", "admin"), createNewModule);
 
 module.exports = router;

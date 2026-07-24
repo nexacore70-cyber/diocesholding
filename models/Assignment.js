@@ -54,13 +54,7 @@ const assignmentSchema = new mongoose.Schema(
 
     submissionType: {
       type: String,
-      enum: [
-        "text",
-        "file",
-        "github",
-        "link",
-        "mixed",
-      ],
+      enum: ["text", "file", "github", "link", "mixed"],
       default: "mixed",
     },
 
@@ -82,11 +76,7 @@ const assignmentSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: [
-        "draft",
-        "published",
-        "closed",
-      ],
+      enum: ["draft", "published", "closed"],
       default: "draft",
     },
 
@@ -105,10 +95,7 @@ const assignmentSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
-module.exports = mongoose.model(
-  "Assignment",
-  assignmentSchema
-);
+module.exports = mongoose.model("Assignment", assignmentSchema);

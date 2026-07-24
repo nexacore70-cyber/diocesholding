@@ -72,18 +72,13 @@ const assignmentSubmissionSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: [
-        "submitted",
-        "graded",
-        "returned",
-        "late",
-      ],
+      enum: ["submitted", "graded", "returned", "late"],
       default: "submitted",
     },
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 // Prevent duplicate submissions
@@ -94,10 +89,10 @@ assignmentSubmissionSchema.index(
   },
   {
     unique: true,
-  }
+  },
 );
 
 module.exports = mongoose.model(
   "AssignmentSubmission",
-  assignmentSubmissionSchema
+  assignmentSubmissionSchema,
 );

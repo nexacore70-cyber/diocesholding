@@ -27,27 +27,12 @@ router.get("/", getQuizzes);
 router.get("/:id", getQuiz);
 
 // Create Quiz
-router.post(
-  "/",
-  protect,
-  authorize("tutor", "admin"),
-  createNewQuiz
-);
+router.post("/", protect, authorize("tutor", "admin"), createNewQuiz);
 
 // Update Quiz
-router.put(
-  "/:id",
-  protect,
-  authorize("tutor", "admin"),
-  updateExistingQuiz
-);
+router.put("/:id", protect, authorize("tutor", "admin"), updateExistingQuiz);
 
 // Delete Quiz
-router.delete(
-  "/:id",
-  protect,
-  authorize("tutor", "admin"),
-  deleteExistingQuiz
-);
+router.delete("/:id", protect, authorize("tutor", "admin"), deleteExistingQuiz);
 
 module.exports = router;

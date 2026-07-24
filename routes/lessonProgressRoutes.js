@@ -25,7 +25,7 @@ router.post(
   "/:lessonId/complete",
   protect,
   authorize("student"),
-  completeStudentLesson
+  completeStudentLesson,
 );
 
 module.exports = router;

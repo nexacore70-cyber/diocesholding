@@ -30,7 +30,7 @@ router.post(
   "/:assignmentId/submit",
   protect,
   authorize("student"),
-  submitStudentAssignment
+  submitStudentAssignment,
 );
 
 // My Submissions
@@ -38,7 +38,7 @@ router.get(
   "/my-submissions",
   protect,
   authorize("student"),
-  getStudentSubmissions
+  getStudentSubmissions,
 );
 
 // =========================
@@ -46,19 +46,14 @@ router.get(
 // =========================
 
 // View Submission
-router.get(
-  "/:id",
-  protect,
-  authorize("tutor", "admin"),
-  getSubmission
-);
+router.get("/:id", protect, authorize("tutor", "admin"), getSubmission);
 
 // Grade Submission
 router.patch(
   "/:id/grade",
   protect,
   authorize("tutor", "admin"),
-  gradeStudentSubmission
+  gradeStudentSubmission,
 );
 
 module.exports = router;

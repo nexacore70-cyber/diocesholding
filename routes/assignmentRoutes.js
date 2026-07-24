@@ -28,53 +28,35 @@ router.get("/test", (req, res) => {
 // =========================
 
 // Get Assignment By ID
-router.get(
-  "/:id",
-  protect,
-  getAssignment
-);
+router.get("/:id", protect, getAssignment);
 
 // Get Course Assignments
-router.get(
-  "/course/:courseId",
-  protect,
-  getAssignmentsByCourse
-);
+router.get("/course/:courseId", protect, getAssignmentsByCourse);
 
 // =========================
 // Tutor/Admin
 // =========================
 
 // Create Assignment
-router.post(
-  "/",
-  protect,
-  authorize("tutor", "admin"),
-  createNewAssignment
-);
+router.post("/", protect, authorize("tutor", "admin"), createNewAssignment);
 
 // Update Assignment
 router.put(
   "/:id",
   protect,
   authorize("tutor", "admin"),
-  updateAssignmentDetails
+  updateAssignmentDetails,
 );
 
 // Delete Assignment
-router.delete(
-  "/:id",
-  protect,
-  authorize("tutor", "admin"),
-  removeAssignment
-);
+router.delete("/:id", protect, authorize("tutor", "admin"), removeAssignment);
 
 // Publish Assignment
 router.patch(
   "/:id/publish",
   protect,
   authorize("tutor", "admin"),
-  publishAssignmentNow
+  publishAssignmentNow,
 );
 
 module.exports = router;

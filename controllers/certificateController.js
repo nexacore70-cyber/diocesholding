@@ -16,7 +16,7 @@ const issueStudentCertificate = async (req, res) => {
   try {
     const result = await issueCertificate(
       req.params.enrollmentId,
-      req.user._id
+      req.user._id,
     );
 
     return res.status(201).json(result);
@@ -80,9 +80,7 @@ const getCertificate = async (req, res) => {
 // @access Public
 const verifyStudentCertificate = async (req, res) => {
   try {
-    const result = await verifyCertificate(
-      req.params.verificationCode
-    );
+    const result = await verifyCertificate(req.params.verificationCode);
 
     return res.status(200).json(result);
   } catch (error) {

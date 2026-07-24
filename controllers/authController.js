@@ -8,15 +8,8 @@ const generateToken = require("../utils/generateToken");
 // =========================
 const registerUser = async (req, res) => {
   try {
-    const {
-      firstName,
-      lastName,
-      username,
-      email,
-      phone,
-      password,
-      roles,
-    } = req.body;
+    const { firstName, lastName, username, email, phone, password, roles } =
+      req.body;
 
     if (!firstName || !lastName || !username || !email || !password) {
       return res.status(400).json({
@@ -69,9 +62,7 @@ const registerUser = async (req, res) => {
     let userRoles = ["student"];
 
     if (roles && Array.isArray(roles)) {
-      const validRoles = roles.filter(role =>
-        allowedRoles.includes(role)
-      );
+      const validRoles = roles.filter((role) => allowedRoles.includes(role));
 
       if (validRoles.length > 0) {
         userRoles = validRoles;
@@ -101,7 +92,6 @@ const registerUser = async (req, res) => {
       token,
       user: userResponse,
     });
-
   } catch (error) {
     console.error(error);
 
@@ -117,7 +107,6 @@ const registerUser = async (req, res) => {
 // =========================
 const loginUser = async (req, res) => {
   try {
-
     const { email, password } = req.body;
 
     if (!email || !password) {
@@ -159,16 +148,13 @@ const loginUser = async (req, res) => {
       token,
       user: userResponse,
     });
-
   } catch (error) {
-
     console.error(error);
 
     res.status(500).json({
       success: false,
       message: "Internal Server Error",
     });
-
   }
 };
 

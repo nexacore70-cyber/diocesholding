@@ -37,8 +37,7 @@ const getAllQuizzes = async () => {
 
 // Get Single Quiz
 const getQuizById = async (quizId) => {
-  const quiz = await Quiz.findById(quizId)
-    .populate("lesson", "title order");
+  const quiz = await Quiz.findById(quizId).populate("lesson", "title order");
 
   if (!quiz) {
     throw new Error("Quiz not found.");
@@ -53,14 +52,10 @@ const getQuizById = async (quizId) => {
 
 // Update Quiz
 const updateQuiz = async (quizId, updateData) => {
-  const quiz = await Quiz.findByIdAndUpdate(
-    quizId,
-    updateData,
-    {
-      new: true,
-      runValidators: true,
-    }
-  ).populate("lesson", "title order");
+  const quiz = await Quiz.findByIdAndUpdate(quizId, updateData, {
+    new: true,
+    runValidators: true,
+  }).populate("lesson", "title order");
 
   if (!quiz) {
     throw new Error("Quiz not found.");

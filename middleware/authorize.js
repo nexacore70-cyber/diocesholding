@@ -10,8 +10,8 @@ const authorize = (...allowedRoles) => {
     console.log("Allowed Roles:", allowedRoles);
     console.log("User Roles:", req.user.roles);
 
-    const hasPermission = req.user.roles.some(role =>
-      allowedRoles.includes(role)
+    const hasPermission = req.user.roles.some((role) =>
+      allowedRoles.includes(role),
     );
 
     if (!hasPermission) {

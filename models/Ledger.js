@@ -34,10 +34,7 @@ const ledgerSchema = new mongoose.Schema(
 
     type: {
       type: String,
-      enum: [
-        "credit",
-        "debit",
-      ],
+      enum: ["credit", "debit"],
       required: true,
     },
 
@@ -70,17 +67,13 @@ const ledgerSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: [
-        "pending",
-        "completed",
-        "failed",
-      ],
+      enum: ["pending", "completed", "failed"],
       default: "completed",
     },
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 module.exports = mongoose.model("Ledger", ledgerSchema);

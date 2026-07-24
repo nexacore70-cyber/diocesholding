@@ -39,7 +39,7 @@ const lessonProgressSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 // Prevent duplicate progress records
@@ -50,10 +50,7 @@ lessonProgressSchema.index(
   },
   {
     unique: true,
-  }
+  },
 );
 
-module.exports = mongoose.model(
-  "LessonProgress",
-  lessonProgressSchema
-);
+module.exports = mongoose.model("LessonProgress", lessonProgressSchema);

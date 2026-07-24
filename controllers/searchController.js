@@ -1,6 +1,4 @@
-const {
-  searchCourses,
-} = require("../services/searchService");
+const { searchCourses } = require("../services/searchService");
 
 // ======================================
 // Search Courses

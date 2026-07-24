@@ -35,8 +35,7 @@ const createLedgerEntry = async ({
 // Get Wallet Ledger
 // ======================================
 const getWalletLedger = async (walletId) => {
-  return await Ledger.find({ wallet: walletId })
-    .sort({ createdAt: -1 });
+  return await Ledger.find({ wallet: walletId }).sort({ createdAt: -1 });
 };
 
 // ======================================

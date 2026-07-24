@@ -107,13 +107,8 @@ const getCourseAssignments = async (courseId) => {
 // =========================
 // Update Assignment
 // =========================
-const updateAssignment = async (
-  assignmentId,
-  updateData
-) => {
-  const assignment = await Assignment.findById(
-    assignmentId
-  );
+const updateAssignment = async (assignmentId, updateData) => {
+  const assignment = await Assignment.findById(assignmentId);
 
   if (!assignment) {
     throw new Error("Assignment not found.");
@@ -134,9 +129,7 @@ const updateAssignment = async (
 // Delete Assignment
 // =========================
 const deleteAssignment = async (assignmentId) => {
-  const assignment = await Assignment.findById(
-    assignmentId
-  );
+  const assignment = await Assignment.findById(assignmentId);
 
   if (!assignment) {
     throw new Error("Assignment not found.");
@@ -153,12 +146,8 @@ const deleteAssignment = async (assignmentId) => {
 // =========================
 // Publish Assignment
 // =========================
-const publishAssignment = async (
-  assignmentId
-) => {
-  const assignment = await Assignment.findById(
-    assignmentId
-  );
+const publishAssignment = async (assignmentId) => {
+  const assignment = await Assignment.findById(assignmentId);
 
   if (!assignment) {
     throw new Error("Assignment not found.");

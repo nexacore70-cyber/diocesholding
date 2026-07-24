@@ -86,7 +86,7 @@ const updateEnrollment = async (enrollmentId, updateData) => {
     {
       new: true,
       runValidators: true,
-    }
+    },
   )
     .populate("student", "firstName lastName email")
     .populate("course", "title slug");

@@ -15,7 +15,7 @@ const submitStudentAssignment = async (req, res) => {
     const result = await submitAssignment(
       req.params.assignmentId,
       req.user._id,
-      req.body
+      req.body,
     );
 
     return res.status(201).json(result);
@@ -36,9 +36,7 @@ const submitStudentAssignment = async (req, res) => {
 // =========================
 const getStudentSubmissions = async (req, res) => {
   try {
-    const result = await getMySubmissions(
-      req.user._id
-    );
+    const result = await getMySubmissions(req.user._id);
 
     return res.status(200).json(result);
   } catch (error) {
@@ -58,9 +56,7 @@ const getStudentSubmissions = async (req, res) => {
 // =========================
 const getSubmission = async (req, res) => {
   try {
-    const result = await getSubmissionById(
-      req.params.id
-    );
+    const result = await getSubmissionById(req.params.id);
 
     return res.status(200).json(result);
   } catch (error) {
@@ -78,10 +74,7 @@ const getSubmission = async (req, res) => {
 // @route PATCH /api/assignment-submissions/:id/grade
 // @access Tutor/Admin
 // =========================
-const gradeStudentSubmission = async (
-  req,
-  res
-) => {
+const gradeStudentSubmission = async (req, res) => {
   try {
     const { score, feedback } = req.body;
 
@@ -89,7 +82,7 @@ const gradeStudentSubmission = async (
       req.params.id,
       req.user._id,
       score,
-      feedback
+      feedback,
     );
 
     return res.status(200).json(result);

@@ -16,14 +16,9 @@ const recalculateCourseRating = async (courseId) => {
   let average = 0;
 
   if (total > 0) {
-    const totalRating = reviews.reduce(
-      (sum, review) => sum + review.rating,
-      0
-    );
+    const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
 
-    average = Number(
-      (totalRating / total).toFixed(2)
-    );
+    average = Number((totalRating / total).toFixed(2));
   }
 
   await Course.findByIdAndUpdate(courseId, {
@@ -35,16 +30,9 @@ const recalculateCourseRating = async (courseId) => {
 // ======================================
 // Create Review
 // ======================================
-const createReview = async (
-  studentId,
-  courseId,
-  rating,
-  comment = ""
-) => {
+const createReview = async (studentId, courseId, rating, comment = "") => {
   if (rating < 1 || rating > 5) {
-    throw new Error(
-      "Rating must be between 1 and 5."
-    );
+    throw new Error("Rating must be between 1 and 5.");
   }
 
   const course = await Course.findById(courseId);
@@ -60,9 +48,7 @@ const createReview = async (
   });
 
   if (!enrollment) {
-    throw new Error(
-      "You are not enrolled in this course."
-    );
+    throw new Error("You are not enrolled in this course.");
   }
 
   const existingReview = await Review.findOne({
@@ -71,9 +57,7 @@ const createReview = async (
   });
 
   if (existingReview) {
-    throw new Error(
-      "You have already reviewed this course."
-    );
+    throw new Error("You have already reviewed this course.");
   }
 
   const review = await Review.create({
@@ -96,32 +80,20 @@ const createReview = async (
 // ======================================
 // Update Review
 // ======================================
-const updateReview = async (
-  reviewId,
-  studentId,
-  rating,
-  comment
-) => {
+const updateReview = async (reviewId, studentId, rating, comment) => {
   const review = await Review.findById(reviewId);
 
   if (!review) {
     throw new Error("Review not found.");
   }
 
-  if (
-    review.student.toString() !==
-    studentId.toString()
-  ) {
-    throw new Error(
-      "You can only edit your own review."
-    );
+  if (review.student.toString() !== studentId.toString()) {
+    throw new Error("You can only edit your own review.");
   }
 
   if (rating !== undefined) {
     if (rating < 1 || rating > 5) {
-      throw new Error(
-        "Rating must be between 1 and 5."
-      );
+      throw new Error("Rating must be between 1 and 5.");
     }
 
     review.rating = rating;
@@ -145,23 +117,15 @@ const updateReview = async (
 // ======================================
 // Delete Review
 // ======================================
-const deleteReview = async (
-  reviewId,
-  studentId
-) => {
+const deleteReview = async (reviewId, studentId) => {
   const review = await Review.findById(reviewId);
 
   if (!review) {
     throw new Error("Review not found.");
   }
 
-  if (
-    review.student.toString() !==
-    studentId.toString()
-  ) {
-    throw new Error(
-      "You can only delete your own review."
-    );
+  if (review.student.toString() !== studentId.toString()) {
+    throw new Error("You can only delete your own review.");
   }
 
   const courseId = review.course;
@@ -184,16 +148,12 @@ const getCourseReviews = async (courseId) => {
     course: courseId,
     status: "published",
   })
-    .populate(
-      "student",
-      "firstName lastName profileImage"
-    )
+    .populate("student", "firstName lastName profileImage")
     .sort({ createdAt: -1 });
 
   return {
     success: true,
-    message:
-      "Course reviews retrieved successfully.",
+    message: "Course reviews retrieved successfully.",
     data: reviews,
   };
 };
@@ -210,8 +170,7 @@ const getMyReviews = async (studentId) => {
 
   return {
     success: true,
-    message:
-      "Reviews retrieved successfully.",
+    message: "Reviews retrieved successfully.",
     data: reviews,
   };
 };

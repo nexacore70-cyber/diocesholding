@@ -1,14 +1,9 @@
 const User = require("../models/User");
 const Course = require("../models/Course");
 
-const {
-  getOrCreateWallet,
-  creditWallet,
-} = require("./walletService");
+const { getOrCreateWallet, creditWallet } = require("./walletService");
 
-const {
-  createLedgerEntry,
-} = require("./ledgerService");
+const { createLedgerEntry } = require("./ledgerService");
 
 // ======================================
 // Process Revenue Sharing
@@ -40,9 +35,7 @@ const processRevenue = async (payment) => {
       throw new Error("Tutor not found.");
     }
 
-    console.log(
-      `Tutor: ${tutor.firstName} ${tutor.lastName}`
-    );
+    console.log(`Tutor: ${tutor.firstName} ${tutor.lastName}`);
 
     // ======================================
     // Revenue Split
@@ -58,27 +51,19 @@ const processRevenue = async (payment) => {
     // ======================================
     console.log("Creating/Getting Tutor Wallet...");
 
-    const tutorWallet = await getOrCreateWallet(
-      tutor._id,
-      "tutor"
-    );
+    const tutorWallet = await getOrCreateWallet(tutor._id, "tutor");
 
     console.log("Tutor Wallet ID:", tutorWallet._id);
 
-    const tutorBalanceBefore =
-      tutorWallet.availableBalance;
+    const tutorBalanceBefore = tutorWallet.availableBalance;
 
-    const updatedTutorWallet =
-      await creditWallet(
-        tutor._id,
-        "tutor",
-        tutorAmount
-      );
-
-    console.log(
-      "Tutor Wallet Balance:",
-      updatedTutorWallet.availableBalance
+    const updatedTutorWallet = await creditWallet(
+      tutor._id,
+      "tutor",
+      tutorAmount,
     );
+
+    console.log("Tutor Wallet Balance:", updatedTutorWallet.availableBalance);
 
     await createLedgerEntry({
       wallet: updatedTutorWallet._id,
@@ -89,8 +74,7 @@ const processRevenue = async (payment) => {
       category: "revenue_share",
       description: `Tutor earnings from ${course.title}`,
       balanceBefore: tutorBalanceBefore,
-      balanceAfter:
-        updatedTutorWallet.availableBalance,
+      balanceAfter: updatedTutorWallet.availableBalance,
     });
 
     console.log("Tutor ledger created.");
@@ -103,40 +87,28 @@ const processRevenue = async (payment) => {
     });
 
     if (!company) {
-      console.log(
-        "No admin found. Company revenue skipped."
-      );
+      console.log("No admin found. Company revenue skipped.");
 
-      console.log(
-        "========== REVENUE PROCESS FINISHED ==========\n"
-      );
+      console.log("========== REVENUE PROCESS FINISHED ==========\n");
 
       return;
     }
 
-    console.log(
-      `Company Account: ${company.firstName} ${company.lastName}`
+    console.log(`Company Account: ${company.firstName} ${company.lastName}`);
+
+    const companyWallet = await getOrCreateWallet(company._id, "company");
+
+    const companyBalanceBefore = companyWallet.availableBalance;
+
+    const updatedCompanyWallet = await creditWallet(
+      company._id,
+      "company",
+      companyAmount,
     );
-
-    const companyWallet =
-      await getOrCreateWallet(
-        company._id,
-        "company"
-      );
-
-    const companyBalanceBefore =
-      companyWallet.availableBalance;
-
-    const updatedCompanyWallet =
-      await creditWallet(
-        company._id,
-        "company",
-        companyAmount
-      );
 
     console.log(
       "Company Wallet Balance:",
-      updatedCompanyWallet.availableBalance
+      updatedCompanyWallet.availableBalance,
     );
 
     await createLedgerEntry({
@@ -147,25 +119,17 @@ const processRevenue = async (payment) => {
       type: "credit",
       category: "revenue_share",
       description: `Company revenue from ${course.title}`,
-      balanceBefore:
-        companyBalanceBefore,
-      balanceAfter:
-        updatedCompanyWallet.availableBalance,
+      balanceBefore: companyBalanceBefore,
+      balanceAfter: updatedCompanyWallet.availableBalance,
     });
 
     console.log("Company ledger created.");
 
-    console.log(
-      "========== REVENUE PROCESS FINISHED ==========\n"
-    );
+    console.log("========== REVENUE PROCESS FINISHED ==========\n");
   } catch (error) {
-    console.error(
-      "========== REVENUE PROCESS FAILED =========="
-    );
+    console.error("========== REVENUE PROCESS FAILED ==========");
     console.error(error);
-    console.error(
-      "============================================"
-    );
+    console.error("============================================");
   }
 };
 

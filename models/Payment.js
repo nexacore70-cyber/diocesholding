@@ -55,13 +55,7 @@ const paymentSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: [
-        "pending",
-        "successful",
-        "failed",
-        "cancelled",
-        "refunded",
-      ],
+      enum: ["pending", "successful", "failed", "cancelled", "refunded"],
       default: "pending",
     },
 
@@ -82,10 +76,7 @@ const paymentSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
-module.exports = mongoose.model(
-  "Payment",
-  paymentSchema
-);
+module.exports = mongoose.model("Payment", paymentSchema);

@@ -1,10 +1,6 @@
-const {
-  getWallet,
-} = require("../services/walletService");
+const { getWallet } = require("../services/walletService");
 
-const {
-  getUserLedger,
-} = require("../services/ledgerService");
+const { getUserLedger } = require("../services/ledgerService");
 
 // ======================================
 // Get My Wallet

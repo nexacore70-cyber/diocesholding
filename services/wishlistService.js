@@ -5,10 +5,7 @@ const Enrollment = require("../models/Enrollment");
 // ======================================
 // Add Course To Wishlist
 // ======================================
-const addToWishlist = async (
-  studentId,
-  courseId
-) => {
+const addToWishlist = async (studentId, courseId) => {
   const course = await Course.findOne({
     _id: courseId,
     isDeleted: false,
@@ -24,9 +21,7 @@ const addToWishlist = async (
   });
 
   if (enrolled) {
-    throw new Error(
-      "You are already enrolled in this course."
-    );
+    throw new Error("You are already enrolled in this course.");
   }
 
   const exists = await Wishlist.findOne({
@@ -35,9 +30,7 @@ const addToWishlist = async (
   });
 
   if (exists) {
-    throw new Error(
-      "Course is already in your wishlist."
-    );
+    throw new Error("Course is already in your wishlist.");
   }
 
   const wishlist = await Wishlist.create({
@@ -61,8 +54,7 @@ const getMyWishlist = async (studentId) => {
   })
     .populate({
       path: "course",
-      select:
-        "title slug thumbnail pricing difficulty ratings tutor",
+      select: "title slug thumbnail pricing difficulty ratings tutor",
       populate: {
         path: "tutor",
         select: "firstName lastName",
@@ -80,10 +72,7 @@ const getMyWishlist = async (studentId) => {
 // ======================================
 // Remove From Wishlist
 // ======================================
-const removeFromWishlist = async (
-  studentId,
-  wishlistId
-) => {
+const removeFromWishlist = async (studentId, wishlistId) => {
   const wishlist = await Wishlist.findOne({
     _id: wishlistId,
     student: studentId,
@@ -97,8 +86,7 @@ const removeFromWishlist = async (
 
   return {
     success: true,
-    message:
-      "Course removed from wishlist successfully.",
+    message: "Course removed from wishlist successfully.",
   };
 };
 

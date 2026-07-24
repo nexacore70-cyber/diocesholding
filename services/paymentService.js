@@ -4,13 +4,9 @@ const Payment = require("../models/Payment");
 const Course = require("../models/Course");
 const Enrollment = require("../models/Enrollment");
 
-const {
-  processRevenue,
-} = require("./revenueService");
+const { processRevenue } = require("./revenueService");
 
-const {
-  createNotification,
-} = require("./notificationService");
+const { createNotification } = require("./notificationService");
 
 // ======================================
 // Generate Unique Payment Reference
@@ -25,11 +21,7 @@ const generatePaymentReference = () => {
 // ======================================
 // Initialize Payment
 // ======================================
-const initializePayment = async (
-  studentId,
-  courseId,
-  gateway = "paystack"
-) => {
+const initializePayment = async (studentId, courseId, gateway = "paystack") => {
   const course = await Course.findById(courseId);
 
   if (!course) {
@@ -38,22 +30,17 @@ const initializePayment = async (
 
   // Free courses should not go through payment
   if (course.pricing.isFree) {
-    throw new Error(
-      "This course is free. No payment required."
-    );
+    throw new Error("This course is free. No payment required.");
   }
 
   // Prevent duplicate enrollment
-  const existingEnrollment =
-    await Enrollment.findOne({
-      student: studentId,
-      course: courseId,
-    });
+  const existingEnrollment = await Enrollment.findOne({
+    student: studentId,
+    course: courseId,
+  });
 
   if (existingEnrollment) {
-    throw new Error(
-      "Student is already enrolled in this course."
-    );
+    throw new Error("Student is already enrolled in this course.");
   }
 
   const payment = await Payment.create({
@@ -76,10 +63,7 @@ const initializePayment = async (
 // ======================================
 // Verify Payment
 // ======================================
-const verifyPayment = async (
-  reference,
-  gatewayReference = ""
-) => {
+const verifyPayment = async (reference, gatewayReference = "") => {
   const payment = await Payment.findOne({
     reference,
   });
@@ -89,9 +73,7 @@ const verifyPayment = async (
   }
 
   if (payment.status === "successful") {
-    throw new Error(
-      "Payment has already been verified."
-    );
+    throw new Error("Payment has already been verified.");
   }
 
   payment.status = "successful";
@@ -147,8 +129,7 @@ const verifyPayment = async (
 
   return {
     success: true,
-    message:
-      "Payment verified successfully.",
+    message: "Payment verified successfully.",
     data: {
       payment,
       enrollment,
@@ -159,16 +140,11 @@ const verifyPayment = async (
 // ======================================
 // Get Payment By Reference
 // ======================================
-const getPaymentByReference = async (
-  reference
-) => {
+const getPaymentByReference = async (reference) => {
   const payment = await Payment.findOne({
     reference,
   })
-    .populate(
-      "student",
-      "firstName lastName email"
-    )
+    .populate("student", "firstName lastName email")
     .populate("course", "title slug")
     .populate("enrollment");
 
@@ -186,9 +162,7 @@ const getPaymentByReference = async (
 // ======================================
 // Get My Payments
 // ======================================
-const getStudentPayments = async (
-  studentId
-) => {
+const getStudentPayments = async (studentId) => {
   const payments = await Payment.find({
     student: studentId,
     isDeleted: false,

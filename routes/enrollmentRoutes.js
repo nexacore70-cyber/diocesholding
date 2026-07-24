@@ -21,27 +21,17 @@ router.get("/test", (req, res) => {
 });
 
 // Get All Enrollments
-router.get(
-  "/",
-  protect,
-  authorize("admin", "tutor"),
-  getEnrollments
-);
+router.get("/", protect, authorize("admin", "tutor"), getEnrollments);
 
 // Get Single Enrollment
-router.get(
-  "/:id",
-  protect,
-  authorize("admin", "tutor"),
-  getEnrollment
-);
+router.get("/:id", protect, authorize("admin", "tutor"), getEnrollment);
 
 // Create Enrollment
 router.post(
   "/",
   protect,
   authorize("student", "admin", "tutor"),
-  createNewEnrollment
+  createNewEnrollment,
 );
 
 // Update Enrollment
@@ -49,7 +39,7 @@ router.put(
   "/:id",
   protect,
   authorize("admin", "tutor"),
-  updateExistingEnrollment
+  updateExistingEnrollment,
 );
 
 // Delete Enrollment
@@ -57,7 +47,7 @@ router.delete(
   "/:id",
   protect,
   authorize("admin", "tutor"),
-  deleteExistingEnrollment
+  deleteExistingEnrollment,
 );
 
 module.exports = router;

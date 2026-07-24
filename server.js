@@ -15,9 +15,7 @@ const quizAttemptRoutes = require("./routes/quizAttemptRoutes");
 const lessonProgressRoutes = require("./routes/lessonProgressRoutes");
 const certificateRoutes = require("./routes/certificateRoutes");
 const assignmentRoutes = require("./routes/assignmentRoutes");
-const assignmentSubmissionRoutes = require(
-  "./routes/assignmentSubmissionRoutes"
-);
+const assignmentSubmissionRoutes = require("./routes/assignmentSubmissionRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 const walletRoutes = require("./routes/walletRoutes");
 const Wallet = require("./models/Wallet");
@@ -45,19 +43,11 @@ mongoose
     console.log("Wallet Collection:", Wallet.collection.name);
     console.log("Ledger Collection:", Ledger.collection.name);
 
-    console.log(
-      "Wallet Count:",
-      await Wallet.countDocuments()
-    );
+    console.log("Wallet Count:", await Wallet.countDocuments());
 
-    console.log(
-      "Ledger Count:",
-      await Ledger.countDocuments()
-    );
+    console.log("Ledger Count:", await Ledger.countDocuments());
   })
-  .catch((err) =>
-    console.error("❌ Database Connection Error:", err)
-  );
+  .catch((err) => console.error("❌ Database Connection Error:", err));
 
 // Routes
 app.use("/api/auth", authRoutes);
@@ -72,10 +62,7 @@ app.use("/api/quiz-attempts", quizAttemptRoutes);
 app.use("/api/lesson-progress", lessonProgressRoutes);
 app.use("/api/certificates", certificateRoutes);
 app.use("/api/assignments", assignmentRoutes);
-app.use(
-  "/api/assignment-submissions",
-  assignmentSubmissionRoutes
-);
+app.use("/api/assignment-submissions", assignmentSubmissionRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/wallet", walletRoutes);
 app.use("/api/withdrawals", withdrawalRoutes);

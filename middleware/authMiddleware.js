@@ -53,8 +53,8 @@ const protect = async (req, res, next) => {
 
     next();
   } catch (error) {
-   console.error("Authentication Error:", error.name);
-   console.error("Authentication Message:", error.message);
+    console.error("Authentication Error:", error.name);
+    console.error("Authentication Message:", error.message);
 
     return res.status(401).json({
       success: false,

@@ -2,7 +2,7 @@ const Course = require("../models/Course");
 const generateSlug = require("../utils/generateSlug");
 
 const createCourse = async (courseData, tutorId) => {
-console.log(courseData);
+  console.log(courseData);
   if (!courseData.title) {
     throw new Error("Course title is required.");
   }

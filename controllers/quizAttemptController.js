@@ -1,17 +1,11 @@
-const {
-  startQuiz,
-  submitQuiz,
-} = require("../services/quizAttemptService");
+const { startQuiz, submitQuiz } = require("../services/quizAttemptService");
 
 // @desc Start Quiz
 // @route POST /api/quizzes/:quizId/start
 // @access Student
 const startQuizAttempt = async (req, res) => {
   try {
-    const result = await startQuiz(
-      req.params.quizId,
-      req.user._id
-    );
+    const result = await startQuiz(req.params.quizId, req.user._id);
 
     return res.status(201).json(result);
   } catch (error) {
@@ -30,11 +24,7 @@ const submitQuizAttempt = async (req, res) => {
     const { attemptId } = req.params;
     const { answers } = req.body;
 
-    const result = await submitQuiz(
-      attemptId,
-      req.user._id,
-      answers
-    );
+    const result = await submitQuiz(attemptId, req.user._id, answers);
 
     return res.status(200).json(result);
   } catch (error) {

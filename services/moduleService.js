@@ -45,8 +45,10 @@ const getAllModules = async () => {
 
 // Get Single Module
 const getModuleById = async (moduleId) => {
-  const module = await Module.findById(moduleId)
-    .populate("course", "title slug");
+  const module = await Module.findById(moduleId).populate(
+    "course",
+    "title slug",
+  );
 
   if (!module) {
     throw new Error("Module not found.");
@@ -61,14 +63,10 @@ const getModuleById = async (moduleId) => {
 
 // Update Module
 const updateModule = async (moduleId, updateData) => {
-  const module = await Module.findByIdAndUpdate(
-    moduleId,
-    updateData,
-    {
-      new: true,
-      runValidators: true,
-    }
-  ).populate("course", "title slug");
+  const module = await Module.findByIdAndUpdate(moduleId, updateData, {
+    new: true,
+    runValidators: true,
+  }).populate("course", "title slug");
 
   if (!module) {
     throw new Error("Module not found.");

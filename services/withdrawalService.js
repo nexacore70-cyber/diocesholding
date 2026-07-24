@@ -1,9 +1,7 @@
 const Withdrawal = require("../models/Withdrawal");
 const Wallet = require("../models/Wallet");
 
-const {
-  createLedgerEntry,
-} = require("./ledgerService");
+const { createLedgerEntry } = require("./ledgerService");
 
 // ======================================
 // Request Withdrawal
@@ -13,12 +11,10 @@ const requestWithdrawal = async (
   amount,
   bankName,
   accountName,
-  accountNumber
+  accountNumber,
 ) => {
   if (!amount || amount <= 0) {
-    throw new Error(
-      "Withdrawal amount must be greater than zero."
-    );
+    throw new Error("Withdrawal amount must be greater than zero.");
   }
 
   const wallet = await Wallet.findOne({ owner });
@@ -32,9 +28,7 @@ const requestWithdrawal = async (
   }
 
   if (wallet.availableBalance < amount) {
-    throw new Error(
-      "Insufficient wallet balance."
-    );
+    throw new Error("Insufficient wallet balance.");
   }
 
   // Reserve funds
@@ -55,8 +49,7 @@ const requestWithdrawal = async (
 
   return {
     success: true,
-    message:
-      "Withdrawal request submitted successfully.",
+    message: "Withdrawal request submitted successfully.",
     data: withdrawal,
   };
 };
@@ -73,8 +66,7 @@ const getMyWithdrawals = async (owner) => {
 
   return {
     success: true,
-    message:
-      "Withdrawals retrieved successfully.",
+    message: "Withdrawals retrieved successfully.",
     data: withdrawals,
   };
 };
@@ -86,17 +78,13 @@ const getPendingWithdrawals = async () => {
   const withdrawals = await Withdrawal.find({
     status: "pending",
   })
-    .populate(
-      "owner",
-      "firstName lastName email"
-    )
+    .populate("owner", "firstName lastName email")
     .populate("wallet")
     .sort({ createdAt: -1 });
 
   return {
     success: true,
-    message:
-      "Pending withdrawals retrieved successfully.",
+    message: "Pending withdrawals retrieved successfully.",
     data: withdrawals,
   };
 };
@@ -104,47 +92,31 @@ const getPendingWithdrawals = async () => {
 // ======================================
 // Approve Withdrawal
 // ======================================
-const approveWithdrawal = async (
-  withdrawalId,
-  adminId
-) => {
-  const withdrawal =
-    await Withdrawal.findById(
-      withdrawalId
-    );
+const approveWithdrawal = async (withdrawalId, adminId) => {
+  const withdrawal = await Withdrawal.findById(withdrawalId);
 
   if (!withdrawal) {
-    throw new Error(
-      "Withdrawal not found."
-    );
+    throw new Error("Withdrawal not found.");
   }
 
   if (withdrawal.status !== "pending") {
-    throw new Error(
-      "Withdrawal has already been processed."
-    );
+    throw new Error("Withdrawal has already been processed.");
   }
 
-  const wallet = await Wallet.findById(
-    withdrawal.wallet
-  );
+  const wallet = await Wallet.findById(withdrawal.wallet);
 
   if (!wallet) {
     throw new Error("Wallet not found.");
   }
 
-  const balanceBefore =
-    wallet.availableBalance;
+  const balanceBefore = wallet.availableBalance;
 
   // Release reserved balance
-  wallet.pendingBalance -=
-    withdrawal.amount;
+  wallet.pendingBalance -= withdrawal.amount;
 
-  wallet.totalWithdrawn +=
-    withdrawal.amount;
+  wallet.totalWithdrawn += withdrawal.amount;
 
-  wallet.lastTransactionAt =
-    new Date();
+  wallet.lastTransactionAt = new Date();
 
   await wallet.save();
 
@@ -155,20 +127,17 @@ const approveWithdrawal = async (
 
   await withdrawal.save();
 
-  const ledger =
-    await createLedgerEntry({
-      wallet: wallet._id,
-      owner: wallet.owner,
-      withdrawal: withdrawal._id,
-      amount: withdrawal.amount,
-      type: "debit",
-      category: "withdrawal",
-      description:
-        "Withdrawal approved",
-      balanceBefore,
-      balanceAfter:
-        wallet.availableBalance,
-    });
+  const ledger = await createLedgerEntry({
+    wallet: wallet._id,
+    owner: wallet.owner,
+    withdrawal: withdrawal._id,
+    amount: withdrawal.amount,
+    type: "debit",
+    category: "withdrawal",
+    description: "Withdrawal approved",
+    balanceBefore,
+    balanceAfter: wallet.availableBalance,
+  });
 
   withdrawal.ledger = ledger._id;
 
@@ -176,8 +145,7 @@ const approveWithdrawal = async (
 
   return {
     success: true,
-    message:
-      "Withdrawal approved successfully.",
+    message: "Withdrawal approved successfully.",
     data: withdrawal,
   };
 };
@@ -185,58 +153,40 @@ const approveWithdrawal = async (
 // ======================================
 // Reject Withdrawal
 // ======================================
-const rejectWithdrawal = async (
-  withdrawalId,
-  adminId,
-  reason = ""
-) => {
-  const withdrawal =
-    await Withdrawal.findById(
-      withdrawalId
-    );
+const rejectWithdrawal = async (withdrawalId, adminId, reason = "") => {
+  const withdrawal = await Withdrawal.findById(withdrawalId);
 
   if (!withdrawal) {
-    throw new Error(
-      "Withdrawal not found."
-    );
+    throw new Error("Withdrawal not found.");
   }
 
   if (withdrawal.status !== "pending") {
-    throw new Error(
-      "Withdrawal has already been processed."
-    );
+    throw new Error("Withdrawal has already been processed.");
   }
 
-  const wallet = await Wallet.findById(
-    withdrawal.wallet
-  );
+  const wallet = await Wallet.findById(withdrawal.wallet);
 
   if (!wallet) {
     throw new Error("Wallet not found.");
   }
 
   // Return reserved money
-  wallet.pendingBalance -=
-    withdrawal.amount;
+  wallet.pendingBalance -= withdrawal.amount;
 
-  wallet.availableBalance +=
-    withdrawal.amount;
+  wallet.availableBalance += withdrawal.amount;
 
   await wallet.save();
 
   withdrawal.status = "rejected";
   withdrawal.approvedBy = adminId;
-  withdrawal.rejectionReason =
-    reason;
-  withdrawal.approvedAt =
-    new Date();
+  withdrawal.rejectionReason = reason;
+  withdrawal.approvedAt = new Date();
 
   await withdrawal.save();
 
   return {
     success: true,
-    message:
-      "Withdrawal rejected successfully.",
+    message: "Withdrawal rejected successfully.",
     data: withdrawal,
   };
 };

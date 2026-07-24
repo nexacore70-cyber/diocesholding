@@ -1,6 +1,4 @@
-const {
-  completeLesson,
-} = require("../services/lessonProgressService");
+const { completeLesson } = require("../services/lessonProgressService");
 
 // @desc Complete Lesson
 // @route POST /api/lesson-progress/:lessonId/complete
@@ -10,7 +8,7 @@ const completeStudentLesson = async (req, res) => {
     const result = await completeLesson(
       req.params.lessonId,
       req.user._id,
-      req.body.watchPercentage
+      req.body.watchPercentage,
     );
 
     return res.status(200).json(result);

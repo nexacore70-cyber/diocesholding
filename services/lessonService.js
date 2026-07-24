@@ -51,8 +51,10 @@ const getAllLessons = async () => {
 
 // Get Single Lesson
 const getLessonById = async (lessonId) => {
-  const lesson = await Lesson.findById(lessonId)
-    .populate("module", "title order");
+  const lesson = await Lesson.findById(lessonId).populate(
+    "module",
+    "title order",
+  );
 
   if (!lesson) {
     throw new Error("Lesson not found.");
@@ -67,14 +69,10 @@ const getLessonById = async (lessonId) => {
 
 // Update Lesson
 const updateLesson = async (lessonId, updateData) => {
-  const lesson = await Lesson.findByIdAndUpdate(
-    lessonId,
-    updateData,
-    {
-      new: true,
-      runValidators: true,
-    }
-  ).populate("module", "title order");
+  const lesson = await Lesson.findByIdAndUpdate(lessonId, updateData, {
+    new: true,
+    runValidators: true,
+  }).populate("module", "title order");
 
   if (!lesson) {
     throw new Error("Lesson not found.");

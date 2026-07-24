@@ -78,17 +78,13 @@ const quizAttemptSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: [
-        "in_progress",
-        "submitted",
-        "graded",
-      ],
+      enum: ["in_progress", "submitted", "graded"],
       default: "in_progress",
     },
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 module.exports = mongoose.model("QuizAttempt", quizAttemptSchema);

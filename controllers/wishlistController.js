@@ -12,10 +12,7 @@ const createWishlist = async (req, res) => {
   try {
     const { courseId } = req.body;
 
-    const result = await addToWishlist(
-      req.user._id,
-      courseId
-    );
+    const result = await addToWishlist(req.user._id, courseId);
 
     return res.status(201).json(result);
   } catch (error) {
@@ -53,10 +50,7 @@ const getWishlist = async (req, res) => {
 // ======================================
 const deleteWishlist = async (req, res) => {
   try {
-    const result = await removeFromWishlist(
-      req.user._id,
-      req.params.id
-    );
+    const result = await removeFromWishlist(req.user._id, req.params.id);
 
     return res.status(200).json(result);
   } catch (error) {

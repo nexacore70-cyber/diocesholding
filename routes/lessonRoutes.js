@@ -27,27 +27,17 @@ router.get("/", getLessons);
 router.get("/:id", getLesson);
 
 // Update Lesson
-router.put(
-  "/:id",
-  protect,
-  authorize("tutor", "admin"),
-  updateExistingLesson
-);
+router.put("/:id", protect, authorize("tutor", "admin"), updateExistingLesson);
 
 // Delete Lesson
 router.delete(
   "/:id",
   protect,
   authorize("tutor", "admin"),
-  deleteExistingLesson
+  deleteExistingLesson,
 );
 
 // Create Lesson
-router.post(
-  "/",
-  protect,
-  authorize("tutor", "admin"),
-  createNewLesson
-);
+router.post("/", protect, authorize("tutor", "admin"), createNewLesson);
 
 module.exports = router;

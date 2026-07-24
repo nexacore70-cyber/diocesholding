@@ -15,33 +15,18 @@ const router = express.Router();
 // Add Course To Wishlist
 // POST /api/wishlist
 // ======================================
-router.post(
-  "/",
-  protect,
-  authorize("student"),
-  createWishlist
-);
+router.post("/", protect, authorize("student"), createWishlist);
 
 // ======================================
 // Get My Wishlist
 // GET /api/wishlist
 // ======================================
-router.get(
-  "/",
-  protect,
-  authorize("student"),
-  getWishlist
-);
+router.get("/", protect, authorize("student"), getWishlist);
 
 // ======================================
 // Remove Course From Wishlist
 // DELETE /api/wishlist/:id
 // ======================================
-router.delete(
-  "/:id",
-  protect,
-  authorize("student"),
-  deleteWishlist
-);
+router.delete("/:id", protect, authorize("student"), deleteWishlist);
 
 module.exports = router;

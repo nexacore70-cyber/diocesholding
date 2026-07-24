@@ -13,12 +13,7 @@ const addReview = async (req, res) => {
   try {
     const { courseId, rating, comment } = req.body;
 
-    const result = await createReview(
-      req.user._id,
-      courseId,
-      rating,
-      comment
-    );
+    const result = await createReview(req.user._id, courseId, rating, comment);
 
     return res.status(201).json(result);
   } catch (error) {
@@ -40,7 +35,7 @@ const editReview = async (req, res) => {
       req.params.id,
       req.user._id,
       req.body.rating,
-      req.body.comment
+      req.body.comment,
     );
 
     return res.status(200).json(result);
@@ -59,10 +54,7 @@ const editReview = async (req, res) => {
 // ======================================
 const removeReview = async (req, res) => {
   try {
-    const result = await deleteReview(
-      req.params.id,
-      req.user._id
-    );
+    const result = await deleteReview(req.params.id, req.user._id);
 
     return res.status(200).json(result);
   } catch (error) {
@@ -80,9 +72,7 @@ const removeReview = async (req, res) => {
 // ======================================
 const getReviewsByCourse = async (req, res) => {
   try {
-    const result = await getCourseReviews(
-      req.params.courseId
-    );
+    const result = await getCourseReviews(req.params.courseId);
 
     return res.status(200).json(result);
   } catch (error) {

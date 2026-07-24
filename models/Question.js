@@ -16,12 +16,7 @@ const questionSchema = new mongoose.Schema(
 
     questionType: {
       type: String,
-      enum: [
-        "multiple_choice",
-        "true_false",
-        "short_answer",
-        "essay",
-      ],
+      enum: ["multiple_choice", "true_false", "short_answer", "essay"],
       default: "multiple_choice",
     },
 
@@ -68,7 +63,7 @@ const questionSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 module.exports = mongoose.model("Question", questionSchema);

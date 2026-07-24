@@ -27,19 +27,14 @@ router.get("/", getQuestions);
 router.get("/:id", getQuestion);
 
 // Create Question
-router.post(
-  "/",
-  protect,
-  authorize("tutor", "admin"),
-  createNewQuestion
-);
+router.post("/", protect, authorize("tutor", "admin"), createNewQuestion);
 
 // Update Question
 router.put(
   "/:id",
   protect,
   authorize("tutor", "admin"),
-  updateExistingQuestion
+  updateExistingQuestion,
 );
 
 // Delete Question
@@ -47,7 +42,7 @@ router.delete(
   "/:id",
   protect,
   authorize("tutor", "admin"),
-  deleteExistingQuestion
+  deleteExistingQuestion,
 );
 
 module.exports = router;

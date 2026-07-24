@@ -17,22 +17,13 @@ const router = express.Router();
 // Tutor Request Withdrawal
 // POST /api/withdrawals
 // ======================================
-router.post(
-  "/",
-  protect,
-  authorize("tutor"),
-  createWithdrawal
-);
+router.post("/", protect, authorize("tutor"), createWithdrawal);
 
 // ======================================
 // Get My Withdrawals
 // GET /api/withdrawals/my-withdrawals
 // ======================================
-router.get(
-  "/my-withdrawals",
-  protect,
-  getWithdrawals
-);
+router.get("/my-withdrawals", protect, getWithdrawals);
 
 // ======================================
 // Admin: Get Pending Withdrawals
@@ -42,7 +33,7 @@ router.get(
   "/pending",
   protect,
   authorize("admin"),
-  getPendingWithdrawalRequests
+  getPendingWithdrawalRequests,
 );
 
 // ======================================
@@ -53,7 +44,7 @@ router.patch(
   "/:id/approve",
   protect,
   authorize("admin"),
-  approveWithdrawalRequest
+  approveWithdrawalRequest,
 );
 
 // ======================================
@@ -64,7 +55,7 @@ router.patch(
   "/:id/reject",
   protect,
   authorize("admin"),
-  rejectWithdrawalRequest
+  rejectWithdrawalRequest,
 );
 
 module.exports = router;

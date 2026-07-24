@@ -27,10 +27,7 @@ router.get("/test", (req, res) => {
 // =========================
 
 // Verify Certificate
-router.get(
-  "/verify/:verificationCode",
-  verifyStudentCertificate
-);
+router.get("/verify/:verificationCode", verifyStudentCertificate);
 
 // =========================
 // Student Routes
@@ -41,15 +38,11 @@ router.get(
   "/my-certificates",
   protect,
   authorize("student"),
-  getStudentCertificates
+  getStudentCertificates,
 );
 
 // Get Certificate By ID
-router.get(
-  "/:id",
-  protect,
-  getCertificate
-);
+router.get("/:id", protect, getCertificate);
 
 // =========================
 // Tutor/Admin Routes
@@ -60,7 +53,7 @@ router.post(
   "/issue/:enrollmentId",
   protect,
   authorize("tutor", "admin"),
-  issueStudentCertificate
+  issueStudentCertificate,
 );
 
 // Revoke Certificate
@@ -68,7 +61,7 @@ router.patch(
   "/revoke/:id",
   protect,
   authorize("tutor", "admin"),
-  revokeStudentCertificate
+  revokeStudentCertificate,
 );
 
 module.exports = router;

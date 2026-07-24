@@ -70,7 +70,7 @@ const lessonSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 module.exports = mongoose.model("Lesson", lessonSchema);

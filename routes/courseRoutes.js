@@ -3,9 +3,7 @@ console.log("✅ courseRoutes loaded");
 const express = require("express");
 const router = express.Router();
 
-const {
-  createNewCourse,
-} = require("../controllers/courseController");
+const { createNewCourse } = require("../controllers/courseController");
 
 const { protect } = require("../middleware/authMiddleware");
 const authorize = require("../middleware/authorize");
@@ -29,11 +27,6 @@ router.get("/test", (req, res) => {
 */
 
 // Create Course (Tutor/Admin Only)
-router.post(
-  "/",
-  protect,
-  authorize("tutor", "admin"),
-  createNewCourse
-);
+router.post("/", protect, authorize("tutor", "admin"), createNewCourse);
 
 module.exports = router;

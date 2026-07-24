@@ -45,8 +45,10 @@ const getAllQuestions = async () => {
 
 // Get Single Question
 const getQuestionById = async (questionId) => {
-  const question = await Question.findById(questionId)
-    .populate("quiz", "title");
+  const question = await Question.findById(questionId).populate(
+    "quiz",
+    "title",
+  );
 
   if (!question) {
     throw new Error("Question not found.");
@@ -61,14 +63,10 @@ const getQuestionById = async (questionId) => {
 
 // Update Question
 const updateQuestion = async (questionId, updateData) => {
-  const question = await Question.findByIdAndUpdate(
-    questionId,
-    updateData,
-    {
-      new: true,
-      runValidators: true,
-    }
-  ).populate("quiz", "title");
+  const question = await Question.findByIdAndUpdate(questionId, updateData, {
+    new: true,
+    runValidators: true,
+  }).populate("quiz", "title");
 
   if (!question) {
     throw new Error("Question not found.");
