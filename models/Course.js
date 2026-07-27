@@ -28,8 +28,20 @@ const courseSchema = new mongoose.Schema(
     },
 
     thumbnail: {
-      type: String,
-      default: "",
+      url: {
+        type: String,
+        default: "",
+      },
+
+      filename: {
+        type: String,
+        default: "",
+      },
+
+      originalName: {
+        type: String,
+        default: "",
+      },
     },
 
     banner: {

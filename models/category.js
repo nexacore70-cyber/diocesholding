@@ -27,8 +27,20 @@ const categorySchema = new mongoose.Schema(
     },
 
     image: {
-      type: String,
-      default: "",
+      url: {
+        type: String,
+        default: "",
+      },
+
+      filename: {
+        type: String,
+        default: "",
+      },
+
+      originalName: {
+        type: String,
+        default: "",
+      },
     },
 
     parentCategory: {
@@ -62,6 +74,16 @@ const categorySchema = new mongoose.Schema(
         type: String,
         default: "",
       },
+    },
+
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+
+    isDeleted: {
+      type: Boolean,
+      default: false,
     },
   },
   {

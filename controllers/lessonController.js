@@ -4,9 +4,12 @@ const {
   getLessonById,
   updateLesson,
   deleteLesson,
+  restoreLesson,
 } = require("../services/lessonService");
 
+// ======================================
 // Create Lesson
+// ======================================
 const createNewLesson = async (req, res) => {
   try {
     const result = await createLesson(req.body, req.user._id);
@@ -22,7 +25,9 @@ const createNewLesson = async (req, res) => {
   }
 };
 
+// ======================================
 // Get All Lessons
+// ======================================
 const getLessons = async (req, res) => {
   try {
     const result = await getAllLessons();
@@ -38,7 +43,9 @@ const getLessons = async (req, res) => {
   }
 };
 
+// ======================================
 // Get Single Lesson
+// ======================================
 const getLesson = async (req, res) => {
   try {
     const result = await getLessonById(req.params.id);
@@ -54,7 +61,9 @@ const getLesson = async (req, res) => {
   }
 };
 
+// ======================================
 // Update Lesson
+// ======================================
 const updateExistingLesson = async (req, res) => {
   try {
     const result = await updateLesson(req.params.id, req.body);
@@ -70,7 +79,9 @@ const updateExistingLesson = async (req, res) => {
   }
 };
 
+// ======================================
 // Delete Lesson
+// ======================================
 const deleteExistingLesson = async (req, res) => {
   try {
     const result = await deleteLesson(req.params.id);
@@ -86,10 +97,29 @@ const deleteExistingLesson = async (req, res) => {
   }
 };
 
+// ======================================
+// Restore Lesson
+// ======================================
+const restoreDeletedLesson = async (req, res) => {
+  try {
+    const result = await restoreLesson(req.params.id);
+
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error("Restore Lesson Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 module.exports = {
   createNewLesson,
   getLessons,
   getLesson,
   updateExistingLesson,
   deleteExistingLesson,
+  restoreDeletedLesson,
 };

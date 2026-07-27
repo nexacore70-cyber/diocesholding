@@ -1,6 +1,8 @@
 const Module = require("../models/Module");
 
+// ======================================
 // Create Module
+// ======================================
 const createModule = async (moduleData, userId) => {
   if (!moduleData.title) {
     throw new Error("Module title is required.");
@@ -10,9 +12,9 @@ const createModule = async (moduleData, userId) => {
     throw new Error("Course ID is required.");
   }
 
-  // Get the next module order automatically
   const lastModule = await Module.findOne({
     course: moduleData.course,
+    isDeleted: false,
   }).sort({ order: -1 });
 
   const nextOrder = lastModule ? lastModule.order + 1 : 1;
@@ -30,11 +32,17 @@ const createModule = async (moduleData, userId) => {
   };
 };
 
+// ======================================
 // Get All Modules
+// ======================================
 const getAllModules = async () => {
-  const modules = await Module.find()
+  const modules = await Module.find({
+    isDeleted: false,
+  })
     .populate("course", "title slug")
-    .sort({ createdAt: -1 });
+    .sort({
+      createdAt: -1,
+    });
 
   return {
     success: true,
@@ -43,12 +51,14 @@ const getAllModules = async () => {
   };
 };
 
-// Get Single Module
+// ======================================
+// Get Module By ID
+// ======================================
 const getModuleById = async (moduleId) => {
-  const module = await Module.findById(moduleId).populate(
-    "course",
-    "title slug",
-  );
+  const module = await Module.findOne({
+    _id: moduleId,
+    isDeleted: false,
+  }).populate("course", "title slug");
 
   if (!module) {
     throw new Error("Module not found.");
@@ -61,16 +71,24 @@ const getModuleById = async (moduleId) => {
   };
 };
 
+// ======================================
 // Update Module
+// ======================================
 const updateModule = async (moduleId, updateData) => {
-  const module = await Module.findByIdAndUpdate(moduleId, updateData, {
-    new: true,
-    runValidators: true,
-  }).populate("course", "title slug");
+  const module = await Module.findOne({
+    _id: moduleId,
+    isDeleted: false,
+  });
 
   if (!module) {
     throw new Error("Module not found.");
   }
+
+  Object.assign(module, updateData);
+
+  await module.save();
+
+  await module.populate("course", "title slug");
 
   return {
     success: true,
@@ -79,19 +97,50 @@ const updateModule = async (moduleId, updateData) => {
   };
 };
 
-// Delete Module
+// ======================================
+// Delete Module (Soft Delete)
+// ======================================
 const deleteModule = async (moduleId) => {
-  const module = await Module.findById(moduleId);
+  const module = await Module.findOne({
+    _id: moduleId,
+    isDeleted: false,
+  });
 
   if (!module) {
     throw new Error("Module not found.");
   }
 
-  await module.deleteOne();
+  module.isDeleted = true;
+
+  await module.save();
 
   return {
     success: true,
     message: "Module deleted successfully.",
+  };
+};
+
+// ======================================
+// Restore Module
+// ======================================
+const restoreModule = async (moduleId) => {
+  const module = await Module.findOne({
+    _id: moduleId,
+    isDeleted: true,
+  });
+
+  if (!module) {
+    throw new Error("Module not found.");
+  }
+
+  module.isDeleted = false;
+
+  await module.save();
+
+  return {
+    success: true,
+    message: "Module restored successfully.",
+    data: module,
   };
 };
 
@@ -101,4 +150,5 @@ module.exports = {
   getModuleById,
   updateModule,
   deleteModule,
+  restoreModule,
 };

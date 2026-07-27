@@ -4,11 +4,12 @@ const {
   getModuleById,
   updateModule,
   deleteModule,
+  restoreModule,
 } = require("../services/moduleService");
 
-// @desc Create Module
-// @route POST /api/modules
-// @access Tutor/Admin
+// ======================================
+// Create Module
+// ======================================
 const createNewModule = async (req, res) => {
   try {
     const result = await createModule(req.body, req.user._id);
@@ -24,9 +25,9 @@ const createNewModule = async (req, res) => {
   }
 };
 
-// @desc Get All Modules
-// @route GET /api/modules
-// @access Public
+// ======================================
+// Get All Modules
+// ======================================
 const getModules = async (req, res) => {
   try {
     const result = await getAllModules();
@@ -42,9 +43,9 @@ const getModules = async (req, res) => {
   }
 };
 
-// @desc Get Single Module
-// @route GET /api/modules/:id
-// @access Public
+// ======================================
+// Get Single Module
+// ======================================
 const getModule = async (req, res) => {
   try {
     const result = await getModuleById(req.params.id);
@@ -60,9 +61,9 @@ const getModule = async (req, res) => {
   }
 };
 
-// @desc Update Module
-// @route PUT /api/modules/:id
-// @access Tutor/Admin
+// ======================================
+// Update Module
+// ======================================
 const updateExistingModule = async (req, res) => {
   try {
     const result = await updateModule(req.params.id, req.body);
@@ -78,9 +79,9 @@ const updateExistingModule = async (req, res) => {
   }
 };
 
-// @desc Delete Module
-// @route DELETE /api/modules/:id
-// @access Tutor/Admin
+// ======================================
+// Delete Module
+// ======================================
 const deleteExistingModule = async (req, res) => {
   try {
     const result = await deleteModule(req.params.id);
@@ -96,10 +97,29 @@ const deleteExistingModule = async (req, res) => {
   }
 };
 
+// ======================================
+// Restore Module
+// ======================================
+const restoreDeletedModule = async (req, res) => {
+  try {
+    const result = await restoreModule(req.params.id);
+
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error("Restore Module Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 module.exports = {
   createNewModule,
   getModules,
   getModule,
   updateExistingModule,
   deleteExistingModule,
+  restoreDeletedModule,
 };

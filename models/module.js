@@ -59,6 +59,11 @@ const moduleSchema = new mongoose.Schema(
       default: false,
     },
 
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
+
     status: {
       type: String,
       enum: ["draft", "published", "archived"],
