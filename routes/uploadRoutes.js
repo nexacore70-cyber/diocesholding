@@ -2,25 +2,21 @@ const express = require("express");
 
 const upload = require("../middleware/uploadMiddleware");
 
-const {
-  uploadFile,
-  deleteFile,
-} = require("../controllers/uploadController");
+const { uploadFile, deleteFile } = require("../controllers/uploadController");
 
 const { protect } = require("../middleware/authMiddleware");
 const authorize = require("../middleware/authorize");
 
 const router = express.Router();
 
+// ======================================
 // Avatar
-router.post(
-  "/avatar",
-  protect,
-  upload.single("avatar"),
-  uploadFile,
-);
+// ======================================
+router.post("/avatar", protect, upload.single("avatar"), uploadFile);
 
+// ======================================
 // Course Thumbnail
+// ======================================
 router.post(
   "/course-thumbnail",
   protect,
@@ -29,7 +25,9 @@ router.post(
   uploadFile,
 );
 
+// ======================================
 // Category Image
+// ======================================
 router.post(
   "/category-image",
   protect,
@@ -38,16 +36,42 @@ router.post(
   uploadFile,
 );
 
-// Lesson File
+// ======================================
+// Lesson Video
+// ======================================
 router.post(
-  "/lesson-file",
+  "/lesson-video",
   protect,
   authorize("tutor", "admin"),
-  upload.single("lessonFile"),
+  upload.single("lessonVideo"),
   uploadFile,
 );
 
+// ======================================
+// Lesson Document
+// ======================================
+router.post(
+  "/lesson-document",
+  protect,
+  authorize("tutor", "admin"),
+  upload.single("lessonDocument"),
+  uploadFile,
+);
+
+// ======================================
+// Lesson Resource
+// ======================================
+router.post(
+  "/lesson-resource",
+  protect,
+  authorize("tutor", "admin"),
+  upload.single("lessonResource"),
+  uploadFile,
+);
+
+// ======================================
 // Assignment File
+// ======================================
 router.post(
   "/assignment-file",
   protect,
@@ -56,7 +80,9 @@ router.post(
   uploadFile,
 );
 
+// ======================================
 // Student Submission
+// ======================================
 router.post(
   "/submission",
   protect,
@@ -65,7 +91,9 @@ router.post(
   uploadFile,
 );
 
+// ======================================
 // Certificate
+// ======================================
 router.post(
   "/certificate",
   protect,
@@ -74,11 +102,9 @@ router.post(
   uploadFile,
 );
 
-router.delete(
-  "/",
-  protect,
-  authorize("admin"),
-  deleteFile,
-);
+// ======================================
+// Delete Uploaded File
+// ======================================
+router.delete("/", protect, authorize("admin"), deleteFile);
 
 module.exports = router;

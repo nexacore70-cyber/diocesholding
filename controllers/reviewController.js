@@ -2,6 +2,7 @@ const {
   createReview,
   updateReview,
   deleteReview,
+  restoreReview,
   getCourseReviews,
   getMyReviews,
 } = require("../services/reviewService");
@@ -68,6 +69,24 @@ const removeReview = async (req, res) => {
 };
 
 // ======================================
+// Restore Review
+// ======================================
+const restoreDeletedReview = async (req, res) => {
+  try {
+    const result = await restoreReview(req.params.id);
+
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error("Restore Review Error:", error);
+
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// ======================================
 // Get Course Reviews
 // ======================================
 const getReviewsByCourse = async (req, res) => {
@@ -107,6 +126,7 @@ module.exports = {
   addReview,
   editReview,
   removeReview,
+  restoreDeletedReview,
   getReviewsByCourse,
   getMyReviewList,
 };

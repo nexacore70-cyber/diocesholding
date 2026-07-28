@@ -9,6 +9,7 @@ const recalculateCourseRating = async (courseId) => {
   const reviews = await Review.find({
     course: courseId,
     status: "published",
+    isDeleted: false,
   });
 
   const total = reviews.length;
@@ -54,6 +55,7 @@ const createReview = async (studentId, courseId, rating, comment = "") => {
   const existingReview = await Review.findOne({
     student: studentId,
     course: courseId,
+    isDeleted: false,
   });
 
   if (existingReview) {
@@ -81,7 +83,10 @@ const createReview = async (studentId, courseId, rating, comment = "") => {
 // Update Review
 // ======================================
 const updateReview = async (reviewId, studentId, rating, comment) => {
-  const review = await Review.findById(reviewId);
+  const review = await Review.findOne({
+    _id: reviewId,
+    isDeleted: false,
+  });
 
   if (!review) {
     throw new Error("Review not found.");
@@ -115,10 +120,13 @@ const updateReview = async (reviewId, studentId, rating, comment) => {
 };
 
 // ======================================
-// Delete Review
+// Delete Review (Soft Delete)
 // ======================================
 const deleteReview = async (reviewId, studentId) => {
-  const review = await Review.findById(reviewId);
+  const review = await Review.findOne({
+    _id: reviewId,
+    isDeleted: false,
+  });
 
   if (!review) {
     throw new Error("Review not found.");
@@ -128,15 +136,41 @@ const deleteReview = async (reviewId, studentId) => {
     throw new Error("You can only delete your own review.");
   }
 
-  const courseId = review.course;
+  review.isDeleted = true;
 
-  await review.deleteOne();
+  await review.save();
 
-  await recalculateCourseRating(courseId);
+  await recalculateCourseRating(review.course);
 
   return {
     success: true,
     message: "Review deleted successfully.",
+  };
+};
+
+// ======================================
+// Restore Review
+// ======================================
+const restoreReview = async (reviewId) => {
+  const review = await Review.findOne({
+    _id: reviewId,
+    isDeleted: true,
+  });
+
+  if (!review) {
+    throw new Error("Review not found.");
+  }
+
+  review.isDeleted = false;
+
+  await review.save();
+
+  await recalculateCourseRating(review.course);
+
+  return {
+    success: true,
+    message: "Review restored successfully.",
+    data: review,
   };
 };
 
@@ -147,6 +181,7 @@ const getCourseReviews = async (courseId) => {
   const reviews = await Review.find({
     course: courseId,
     status: "published",
+    isDeleted: false,
   })
     .populate("student", "firstName lastName profileImage")
     .sort({ createdAt: -1 });
@@ -164,6 +199,7 @@ const getCourseReviews = async (courseId) => {
 const getMyReviews = async (studentId) => {
   const reviews = await Review.find({
     student: studentId,
+    isDeleted: false,
   })
     .populate("course", "title slug")
     .sort({ createdAt: -1 });
@@ -179,6 +215,7 @@ module.exports = {
   createReview,
   updateReview,
   deleteReview,
+  restoreReview,
   getCourseReviews,
   getMyReviews,
 };

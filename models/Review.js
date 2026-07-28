@@ -39,6 +39,11 @@ const reviewSchema = new mongoose.Schema(
       enum: ["published", "hidden"],
       default: "published",
     },
+
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,

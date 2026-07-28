@@ -5,39 +5,57 @@ const fs = require("fs");
 // ======================================
 // Storage
 // ======================================
+// ======================================
+// Storage
+// ======================================
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     let folder = "uploads/temp";
 
-    if (file.fieldname === "avatar") {
-      folder = "uploads/avatars";
+    switch (file.fieldname) {
+      case "avatar":
+        folder = "uploads/avatars";
+        break;
+
+      case "thumbnail":
+        folder = "uploads/course-thumbnails";
+        break;
+
+      case "categoryImage":
+        folder = "uploads/categories";
+        break;
+
+      case "lessonVideo":
+        folder = "uploads/lesson-videos";
+        break;
+
+      case "lessonDocument":
+        folder = "uploads/lesson-documents";
+        break;
+
+      case "lessonResource":
+        folder = "uploads/lesson-resources";
+        break;
+
+      case "assignmentFile":
+        folder = "uploads/assignment-files";
+        break;
+
+      case "submissionFile":
+        folder = "uploads/submissions";
+        break;
+
+      case "certificate":
+        folder = "uploads/certificates";
+        break;
+
+      default:
+        folder = "uploads/temp";
     }
 
-    if (file.fieldname === "thumbnail") {
-      folder = "uploads/course-thumbnails";
-    }
-
-    if (file.fieldname === "categoryImage") {
-      folder = "uploads/categories";
-    }
-
-    if (file.fieldname === "lessonFile") {
-      folder = "uploads/lesson-files";
-    }
-
-    if (file.fieldname === "assignmentFile") {
-      folder = "uploads/assignment-files";
-    }
-
-    if (file.fieldname === "submissionFile") {
-      folder = "uploads/submissions";
-    }
-
-    if (file.fieldname === "certificate") {
-      folder = "uploads/certificates";
-    }
-
-    fs.mkdirSync(folder, { recursive: true });
+    fs.mkdirSync(folder, {
+      recursive: true,
+    });
 
     cb(null, folder);
   },
@@ -77,7 +95,7 @@ const fileFilter = (req, file, cb) => {
     ".avi",
     ".mp3",
     ".wav",
-];
+  ];
 
   const extension = path.extname(file.originalname).toLowerCase();
 
@@ -96,7 +114,7 @@ const upload = multer({
   fileFilter,
 
   limits: {
-    fileSize: 1024 * 1024 * 100, // 100 MB
+    fileSize: 1024 * 1024 * 1024, // 1GB
   },
 });
 

@@ -4,6 +4,7 @@ const {
   addReview,
   editReview,
   removeReview,
+  restoreDeletedReview,
   getReviewsByCourse,
   getMyReviewList,
 } = require("../controllers/reviewController");
@@ -14,33 +15,33 @@ const authorize = require("../middleware/authorize");
 const router = express.Router();
 
 // ======================================
-// Student: Create Review
-// POST /api/reviews
+// Student Routes
 // ======================================
+
+// Create Review
 router.post("/", protect, authorize("student"), addReview);
 
-// ======================================
-// Student: Get My Reviews
-// GET /api/reviews/my-reviews
-// ======================================
+// Get My Reviews
 router.get("/my-reviews", protect, authorize("student"), getMyReviewList);
 
-// ======================================
-// Public: Get Course Reviews
-// GET /api/reviews/course/:courseId
-// ======================================
-router.get("/course/:courseId", getReviewsByCourse);
-
-// ======================================
-// Student: Update Review
-// PATCH /api/reviews/:id
-// ======================================
+// Update Review
 router.patch("/:id", protect, authorize("student"), editReview);
 
-// ======================================
-// Student: Delete Review
-// DELETE /api/reviews/:id
-// ======================================
+// Soft Delete Review
 router.delete("/:id", protect, authorize("student"), removeReview);
+
+// ======================================
+// Admin Routes
+// ======================================
+
+// Restore Review
+router.patch("/restore/:id", protect, authorize("admin"), restoreDeletedReview);
+
+// ======================================
+// Public Routes
+// ======================================
+
+// Get Course Reviews
+router.get("/course/:courseId", getReviewsByCourse);
 
 module.exports = router;
