@@ -4,14 +4,15 @@ const {
   getCertificateById,
   verifyCertificate,
   revokeCertificate,
+  deleteCertificate,
+  restoreCertificate,
 } = require("../services/certificateService");
 
-// =========================
+// ======================================
 // Issue Certificate
-// =========================
-// @desc Issue Certificate
-// @route POST /api/certificates/issue/:enrollmentId
-// @access Tutor/Admin
+// POST /api/certificates/issue/:enrollmentId
+// Tutor/Admin
+// ======================================
 const issueStudentCertificate = async (req, res) => {
   try {
     const result = await issueCertificate(
@@ -30,12 +31,11 @@ const issueStudentCertificate = async (req, res) => {
   }
 };
 
-// =========================
+// ======================================
 // Get My Certificates
-// =========================
-// @desc Get My Certificates
-// @route GET /api/certificates/my-certificates
-// @access Student
+// GET /api/certificates/my-certificates
+// Student
+// ======================================
 const getStudentCertificates = async (req, res) => {
   try {
     const result = await getMyCertificates(req.user._id);
@@ -51,12 +51,11 @@ const getStudentCertificates = async (req, res) => {
   }
 };
 
-// =========================
+// ======================================
 // Get Certificate By ID
-// =========================
-// @desc Get Certificate By ID
-// @route GET /api/certificates/:id
-// @access Authenticated User
+// GET /api/certificates/:id
+// Authenticated
+// ======================================
 const getCertificate = async (req, res) => {
   try {
     const result = await getCertificateById(req.params.id);
@@ -72,12 +71,11 @@ const getCertificate = async (req, res) => {
   }
 };
 
-// =========================
+// ======================================
 // Verify Certificate
-// =========================
-// @desc Verify Certificate
-// @route GET /api/certificates/verify/:verificationCode
-// @access Public
+// GET /api/certificates/verify/:verificationCode
+// Public
+// ======================================
 const verifyStudentCertificate = async (req, res) => {
   try {
     const result = await verifyCertificate(req.params.verificationCode);
@@ -93,19 +91,60 @@ const verifyStudentCertificate = async (req, res) => {
   }
 };
 
-// =========================
+// ======================================
 // Revoke Certificate
-// =========================
-// @desc Revoke Certificate
-// @route PATCH /api/certificates/revoke/:id
-// @access Tutor/Admin
+// PATCH /api/certificates/revoke/:id
+// Tutor/Admin
+// ======================================
 const revokeStudentCertificate = async (req, res) => {
   try {
-    const result = await revokeCertificate(req.params.id);
+    const { reason } = req.body;
+
+    const result = await revokeCertificate(req.params.id, reason);
 
     return res.status(200).json(result);
   } catch (error) {
     console.error("Revoke Certificate Error:", error);
+
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// ======================================
+// Delete Certificate (Soft Delete)
+// DELETE /api/certificates/:id
+// Admin
+// ======================================
+const deleteStudentCertificate = async (req, res) => {
+  try {
+    const result = await deleteCertificate(req.params.id);
+
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error("Delete Certificate Error:", error);
+
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// ======================================
+// Restore Certificate
+// PATCH /api/certificates/restore/:id
+// Admin
+// ======================================
+const restoreStudentCertificate = async (req, res) => {
+  try {
+    const result = await restoreCertificate(req.params.id);
+
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error("Restore Certificate Error:", error);
 
     return res.status(400).json({
       success: false,
@@ -120,4 +159,6 @@ module.exports = {
   getCertificate,
   verifyStudentCertificate,
   revokeStudentCertificate,
+  deleteStudentCertificate,
+  restoreStudentCertificate,
 };

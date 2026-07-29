@@ -5,11 +5,11 @@ const {
   gradeSubmission,
 } = require("../services/assignmentSubmissionService");
 
-// =========================
+// ======================================
 // Submit Assignment
 // @route POST /api/assignment-submissions/:assignmentId/submit
 // @access Student
-// =========================
+// ======================================
 const submitStudentAssignment = async (req, res) => {
   try {
     const result = await submitAssignment(
@@ -29,11 +29,11 @@ const submitStudentAssignment = async (req, res) => {
   }
 };
 
-// =========================
+// ======================================
 // Get My Submissions
 // @route GET /api/assignment-submissions/my-submissions
 // @access Student
-// =========================
+// ======================================
 const getStudentSubmissions = async (req, res) => {
   try {
     const result = await getMySubmissions(req.user._id);
@@ -49,11 +49,11 @@ const getStudentSubmissions = async (req, res) => {
   }
 };
 
-// =========================
+// ======================================
 // Get Submission By ID
 // @route GET /api/assignment-submissions/:id
 // @access Tutor/Admin
-// =========================
+// ======================================
 const getSubmission = async (req, res) => {
   try {
     const result = await getSubmissionById(req.params.id);
@@ -69,20 +69,28 @@ const getSubmission = async (req, res) => {
   }
 };
 
-// =========================
+// ======================================
 // Grade Submission
 // @route PATCH /api/assignment-submissions/:id/grade
 // @access Tutor/Admin
-// =========================
+// ======================================
 const gradeStudentSubmission = async (req, res) => {
   try {
-    const { score, feedback } = req.body;
+    const { score, feedback = "", gradingRemarks = "" } = req.body;
+
+    if (score === undefined || score === null) {
+      return res.status(400).json({
+        success: false,
+        message: "Score is required.",
+      });
+    }
 
     const result = await gradeSubmission(
       req.params.id,
       req.user._id,
-      score,
+      Number(score),
       feedback,
+      gradingRemarks,
     );
 
     return res.status(200).json(result);

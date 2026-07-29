@@ -1,6 +1,9 @@
 const Quiz = require("../models/Quiz");
+const generateSlug = require("../utils/generateSlug");
 
+// ======================================
 // Create Quiz
+// ======================================
 const createQuiz = async (quizData, userId) => {
   if (!quizData.title) {
     throw new Error("Quiz title is required.");
@@ -10,8 +13,37 @@ const createQuiz = async (quizData, userId) => {
     throw new Error("Lesson ID is required.");
   }
 
+  const existingQuiz = await Quiz.findOne({
+    title: quizData.title.trim(),
+    lesson: quizData.lesson,
+    isDeleted: false,
+  });
+
+  if (existingQuiz) {
+    throw new Error("A quiz with this title already exists in this lesson.");
+  }
+
+  let slug = generateSlug(quizData.title);
+
+  let existingSlug = await Quiz.findOne({
+    slug,
+    isDeleted: false,
+  });
+
+  let counter = 1;
+
+  while (existingSlug) {
+    slug = `${generateSlug(quizData.title)}-${counter}`;
+    existingSlug = await Quiz.findOne({
+      slug,
+      isDeleted: false,
+    });
+    counter++;
+  }
+
   const quiz = await Quiz.create({
     ...quizData,
+    slug,
     createdBy: userId,
   });
 
@@ -22,11 +54,17 @@ const createQuiz = async (quizData, userId) => {
   };
 };
 
+// ======================================
 // Get All Quizzes
+// ======================================
 const getAllQuizzes = async () => {
-  const quizzes = await Quiz.find()
+  const quizzes = await Quiz.find({
+    isDeleted: false,
+  })
     .populate("lesson", "title order")
-    .sort({ createdAt: -1 });
+    .sort({
+      createdAt: -1,
+    });
 
   return {
     success: true,
@@ -35,9 +73,14 @@ const getAllQuizzes = async () => {
   };
 };
 
-// Get Single Quiz
+// ======================================
+// Get Quiz By ID
+// ======================================
 const getQuizById = async (quizId) => {
-  const quiz = await Quiz.findById(quizId).populate("lesson", "title order");
+  const quiz = await Quiz.findOne({
+    _id: quizId,
+    isDeleted: false,
+  }).populate("lesson", "title order");
 
   if (!quiz) {
     throw new Error("Quiz not found.");
@@ -50,16 +93,63 @@ const getQuizById = async (quizId) => {
   };
 };
 
+// ======================================
 // Update Quiz
+// ======================================
 const updateQuiz = async (quizId, updateData) => {
-  const quiz = await Quiz.findByIdAndUpdate(quizId, updateData, {
-    new: true,
-    runValidators: true,
-  }).populate("lesson", "title order");
+  const quiz = await Quiz.findOne({
+    _id: quizId,
+    isDeleted: false,
+  });
 
   if (!quiz) {
     throw new Error("Quiz not found.");
   }
+
+  if (updateData.title) {
+    const duplicate = await Quiz.findOne({
+      _id: { $ne: quizId },
+      lesson: updateData.lesson || quiz.lesson,
+      title: updateData.title.trim(),
+      isDeleted: false,
+    });
+
+    if (duplicate) {
+      throw new Error(
+        "Another quiz with this title already exists in this lesson.",
+      );
+    }
+
+    let slug = generateSlug(updateData.title);
+
+    let existingSlug = await Quiz.findOne({
+      _id: { $ne: quizId },
+      slug,
+      isDeleted: false,
+    });
+
+    let counter = 1;
+
+    while (existingSlug) {
+      slug = `${generateSlug(updateData.title)}-${counter}`;
+
+      existingSlug = await Quiz.findOne({
+        _id: { $ne: quizId },
+        slug,
+        isDeleted: false,
+      });
+
+      counter++;
+    }
+
+    quiz.slug = slug;
+  }
+
+  Object.assign(quiz, updateData);
+
+  await quiz.save();
+
+  await quiz.populate("lesson", "title order");
 
   return {
     success: true,
@@ -68,17 +158,50 @@ const updateQuiz = async (quizId, updateData) => {
   };
 };
 
-// Delete Quiz
+// ======================================
+// Delete Quiz (Soft Delete)
+// ======================================
 const deleteQuiz = async (quizId) => {
-  const quiz = await Quiz.findByIdAndDelete(quizId);
+  const quiz = await Quiz.findOne({
+    _id: quizId,
+    isDeleted: false,
+  });
 
   if (!quiz) {
     throw new Error("Quiz not found.");
   }
 
+  quiz.isDeleted = true;
+
+  await quiz.save();
+
   return {
     success: true,
     message: "Quiz deleted successfully.",
+  };
+};
+
+// ======================================
+// Restore Quiz
+// ======================================
+const restoreQuiz = async (quizId) => {
+  const quiz = await Quiz.findOne({
+    _id: quizId,
+    isDeleted: true,
+  });
+
+  if (!quiz) {
+    throw new Error("Quiz not found.");
+  }
+
+  quiz.isDeleted = false;
+
+  await quiz.save();
+
+  return {
+    success: true,
+    message: "Quiz restored successfully.",
+    data: quiz,
   };
 };
 
@@ -88,4 +211,5 @@ module.exports = {
   getQuizById,
   updateQuiz,
   deleteQuiz,
+  restoreQuiz,
 };

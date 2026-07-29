@@ -15,21 +15,37 @@ const addToWishlist = async (studentId, courseId) => {
     throw new Error("Course not found.");
   }
 
+  if (!course.isPublished) {
+    throw new Error("This course is not available.");
+  }
+
   const enrolled = await Enrollment.findOne({
     student: studentId,
     course: courseId,
+    status: "active",
   });
 
   if (enrolled) {
     throw new Error("You are already enrolled in this course.");
   }
 
-  const exists = await Wishlist.findOne({
+  const existingWishlist = await Wishlist.findOne({
     student: studentId,
     course: courseId,
   });
 
-  if (exists) {
+  if (existingWishlist) {
+    if (existingWishlist.isDeleted) {
+      existingWishlist.isDeleted = false;
+      await existingWishlist.save();
+
+      return {
+        success: true,
+        message: "Course restored to wishlist successfully.",
+        data: existingWishlist,
+      };
+    }
+
     throw new Error("Course is already in your wishlist.");
   }
 
@@ -51,16 +67,20 @@ const addToWishlist = async (studentId, courseId) => {
 const getMyWishlist = async (studentId) => {
   const wishlist = await Wishlist.find({
     student: studentId,
+    isDeleted: false,
   })
     .populate({
       path: "course",
-      select: "title slug thumbnail pricing difficulty ratings tutor",
+      select:
+        "title slug thumbnail pricing difficulty ratings tutor isPublished",
       populate: {
         path: "tutor",
         select: "firstName lastName",
       },
     })
-    .sort({ createdAt: -1 });
+    .sort({
+      createdAt: -1,
+    });
 
   return {
     success: true,
@@ -70,19 +90,22 @@ const getMyWishlist = async (studentId) => {
 };
 
 // ======================================
-// Remove From Wishlist
+// Remove From Wishlist (Soft Delete)
 // ======================================
 const removeFromWishlist = async (studentId, wishlistId) => {
   const wishlist = await Wishlist.findOne({
     _id: wishlistId,
     student: studentId,
+    isDeleted: false,
   });
 
   if (!wishlist) {
     throw new Error("Wishlist item not found.");
   }
 
-  await wishlist.deleteOne();
+  wishlist.isDeleted = true;
+
+  await wishlist.save();
 
   return {
     success: true,
@@ -90,8 +113,34 @@ const removeFromWishlist = async (studentId, wishlistId) => {
   };
 };
 
+// ======================================
+// Restore Wishlist Item
+// ======================================
+const restoreWishlistItem = async (wishlistId, studentId) => {
+  const wishlist = await Wishlist.findOne({
+    _id: wishlistId,
+    student: studentId,
+    isDeleted: true,
+  });
+
+  if (!wishlist) {
+    throw new Error("Wishlist item not found.");
+  }
+
+  wishlist.isDeleted = false;
+
+  await wishlist.save();
+
+  return {
+    success: true,
+    message: "Wishlist restored successfully.",
+    data: wishlist,
+  };
+};
+
 module.exports = {
   addToWishlist,
   getMyWishlist,
   removeFromWishlist,
+  restoreWishlistItem,
 };

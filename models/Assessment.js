@@ -1,11 +1,12 @@
 const mongoose = require("mongoose");
 
-const quizSchema = new mongoose.Schema(
+const assessmentSchema = new mongoose.Schema(
   {
-    lesson: {
+    course: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Lesson",
+      ref: "Course",
       required: true,
+      unique: true,
     },
 
     title: {
@@ -14,22 +15,23 @@ const quizSchema = new mongoose.Schema(
       trim: true,
     },
 
-    slug: {
-      type: String,
-      unique: true,
-      trim: true,
-    },
-
     description: {
       type: String,
-      trim: true,
       default: "",
+      trim: true,
     },
 
     instructions: {
       type: String,
-      trim: true,
       default: "",
+      trim: true,
+    },
+
+    passingScore: {
+      type: Number,
+      default: 60,
+      min: 0,
+      max: 100,
     },
 
     timeLimit: {
@@ -38,73 +40,43 @@ const quizSchema = new mongoose.Schema(
       min: 1,
     },
 
-    passingScore: {
-      type: Number,
-      default: 50,
-      min: 0,
-      max: 100,
-    },
-
-    totalMarks: {
-      type: Number,
-      default: 0,
-    },
-
     totalQuestions: {
       type: Number,
-      default: 0,
+      default: 50,
+      min: 1,
     },
 
     maxAttempts: {
       type: Number,
-      default: 1,
+      default: 3,
       min: 1,
     },
 
-    shuffleQuestions: {
-      type: Boolean,
-      default: false,
+    cooldownDays: {
+      type: Number,
+      default: 30,
+      min: 0,
     },
 
-    shuffleAnswers: {
-      type: Boolean,
-      default: false,
-    },
-
-    showCorrectAnswers: {
+    randomizeQuestions: {
       type: Boolean,
       default: true,
     },
 
-    allowReview: {
+    showResultImmediately: {
       type: Boolean,
       default: true,
     },
 
-    availableFrom: {
-      type: Date,
-      default: null,
-    },
-
-    availableUntil: {
-      type: Date,
-      default: null,
+    certificateRequired: {
+      type: Boolean,
+      default: true,
     },
 
     status: {
       type: String,
       enum: ["draft", "published", "archived"],
       default: "draft",
-    },
-
-    isActive: {
-      type: Boolean,
-      default: true,
-    },
-
-    isDeleted: {
-      type: Boolean,
-      default: false,
     },
 
     createdBy: {
@@ -118,9 +90,4 @@ const quizSchema = new mongoose.Schema(
   },
 );
 
-quizSchema.index({
-  lesson: 1,
-  isDeleted: 1,
-});
-
-module.exports = mongoose.model("Quiz", quizSchema);
+module.exports = mongoose.model("Assessment", assessmentSchema);

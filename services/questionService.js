@@ -1,6 +1,9 @@
 const Question = require("../models/Question");
+const Quiz = require("../models/Quiz");
 
+// ======================================
 // Create Question
+// ======================================
 const createQuestion = async (questionData, userId) => {
   if (!questionData.question) {
     throw new Error("Question is required.");
@@ -10,7 +13,17 @@ const createQuestion = async (questionData, userId) => {
     throw new Error("Quiz ID is required.");
   }
 
-  // Get the next question order automatically
+  const quiz = await Quiz.findById(questionData.quiz);
+
+  if (!quiz) {
+    throw new Error("Quiz not found.");
+  }
+
+  if (quiz.status === "archived") {
+    throw new Error("You cannot add questions to an archived quiz.");
+  }
+
+  // Automatically determine order
   const lastQuestion = await Question.findOne({
     quiz: questionData.quiz,
   }).sort({ order: -1 });
@@ -23,18 +36,36 @@ const createQuestion = async (questionData, userId) => {
     createdBy: userId,
   });
 
+  const populatedQuestion = await Question.findById(question._id).populate({
+    path: "quiz",
+    select: "title status",
+    populate: {
+      path: "lesson",
+      select: "title",
+    },
+  });
+
   return {
     success: true,
     message: "Question created successfully.",
-    data: question,
+    data: populatedQuestion,
   };
 };
 
+// ======================================
 // Get All Questions
+// ======================================
 const getAllQuestions = async () => {
   const questions = await Question.find()
-    .populate("quiz", "title")
-    .sort({ createdAt: -1 });
+    .populate({
+      path: "quiz",
+      select: "title status",
+      populate: {
+        path: "lesson",
+        select: "title",
+      },
+    })
+    .sort({ order: 1 });
 
   return {
     success: true,
@@ -43,12 +74,18 @@ const getAllQuestions = async () => {
   };
 };
 
+// ======================================
 // Get Single Question
+// ======================================
 const getQuestionById = async (questionId) => {
-  const question = await Question.findById(questionId).populate(
-    "quiz",
-    "title",
-  );
+  const question = await Question.findById(questionId).populate({
+    path: "quiz",
+    select: "title status",
+    populate: {
+      path: "lesson",
+      select: "title",
+    },
+  });
 
   if (!question) {
     throw new Error("Question not found.");
@@ -61,16 +98,33 @@ const getQuestionById = async (questionId) => {
   };
 };
 
+// ======================================
 // Update Question
+// ======================================
 const updateQuestion = async (questionId, updateData) => {
+  const existingQuestion = await Question.findById(questionId);
+
+  if (!existingQuestion) {
+    throw new Error("Question not found.");
+  }
+
+  const quiz = await Quiz.findById(existingQuestion.quiz);
+
+  if (quiz && quiz.status === "archived") {
+    throw new Error("Archived quizzes cannot be modified.");
+  }
+
   const question = await Question.findByIdAndUpdate(questionId, updateData, {
     new: true,
     runValidators: true,
-  }).populate("quiz", "title");
-
-  if (!question) {
-    throw new Error("Question not found.");
-  }
+  }).populate({
+    path: "quiz",
+    select: "title status",
+    populate: {
+      path: "lesson",
+      select: "title",
+    },
+  });
 
   return {
     success: true,
@@ -79,13 +133,17 @@ const updateQuestion = async (questionId, updateData) => {
   };
 };
 
+// ======================================
 // Delete Question
+// ======================================
 const deleteQuestion = async (questionId) => {
-  const question = await Question.findByIdAndDelete(questionId);
+  const question = await Question.findById(questionId);
 
   if (!question) {
     throw new Error("Question not found.");
   }
+
+  await question.deleteOne();
 
   return {
     success: true,

@@ -7,14 +7,16 @@ const {
   getCertificate,
   verifyStudentCertificate,
   revokeStudentCertificate,
+  deleteStudentCertificate,
+  restoreStudentCertificate,
 } = require("../controllers/certificateController");
 
 const { protect } = require("../middleware/authMiddleware");
 const authorize = require("../middleware/authorize");
 
-// =========================
+// ======================================
 // Test Route
-// =========================
+// ======================================
 router.get("/test", (req, res) => {
   res.json({
     success: true,
@@ -22,16 +24,16 @@ router.get("/test", (req, res) => {
   });
 });
 
-// =========================
+// ======================================
 // Public Routes
-// =========================
+// ======================================
 
 // Verify Certificate
 router.get("/verify/:verificationCode", verifyStudentCertificate);
 
-// =========================
+// ======================================
 // Student Routes
-// =========================
+// ======================================
 
 // Get My Certificates
 router.get(
@@ -44,9 +46,9 @@ router.get(
 // Get Certificate By ID
 router.get("/:id", protect, getCertificate);
 
-// =========================
+// ======================================
 // Tutor/Admin Routes
-// =========================
+// ======================================
 
 // Issue Certificate
 router.post(
@@ -62,6 +64,21 @@ router.patch(
   protect,
   authorize("tutor", "admin"),
   revokeStudentCertificate,
+);
+
+// ======================================
+// Admin Routes
+// ======================================
+
+// Soft Delete Certificate
+router.delete("/:id", protect, authorize("admin"), deleteStudentCertificate);
+
+// Restore Certificate
+router.patch(
+  "/restore/:id",
+  protect,
+  authorize("admin"),
+  restoreStudentCertificate,
 );
 
 module.exports = router;

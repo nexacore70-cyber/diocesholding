@@ -6,12 +6,14 @@ const certificateSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
+      index: true,
     },
 
     course: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Course",
       required: true,
+      index: true,
     },
 
     enrollment: {
@@ -26,6 +28,7 @@ const certificateSchema = new mongoose.Schema(
       required: true,
       unique: true,
       trim: true,
+      index: true,
     },
 
     verificationCode: {
@@ -33,6 +36,7 @@ const certificateSchema = new mongoose.Schema(
       required: true,
       unique: true,
       trim: true,
+      index: true,
     },
 
     issuedBy: {
@@ -55,6 +59,23 @@ const certificateSchema = new mongoose.Schema(
       type: String,
       enum: ["issued", "revoked"],
       default: "issued",
+    },
+
+    isDeleted: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+
+    revokedAt: {
+      type: Date,
+      default: null,
+    },
+
+    revokedReason: {
+      type: String,
+      default: "",
+      trim: true,
     },
   },
   {

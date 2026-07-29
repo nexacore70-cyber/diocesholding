@@ -3,9 +3,9 @@ const Lesson = require("../models/Lesson");
 const Module = require("../models/Module");
 const Course = require("../models/Course");
 
-// =========================
+// ======================================
 // Create Assignment
-// =========================
+// ======================================
 const createAssignment = async (data, tutorId) => {
   const {
     lesson,
@@ -22,25 +22,45 @@ const createAssignment = async (data, tutorId) => {
     attachments,
   } = data;
 
-  // Verify lesson exists
+  if (!lesson) {
+    throw new Error("Lesson is required.");
+  }
+
+  if (!title) {
+    throw new Error("Assignment title is required.");
+  }
+
+  if (passingScore > maxScore) {
+    throw new Error("Passing score cannot exceed maximum score.");
+  }
+
   const lessonData = await Lesson.findById(lesson);
 
   if (!lessonData) {
     throw new Error("Lesson not found.");
   }
 
-  // Verify module exists
   const moduleData = await Module.findById(lessonData.module);
 
   if (!moduleData) {
     throw new Error("Module not found.");
   }
 
-  // Verify course exists
   const courseData = await Course.findById(moduleData.course);
 
   if (!courseData) {
     throw new Error("Course not found.");
+  }
+
+  const existing = await Assignment.findOne({
+    lesson,
+    title,
+  });
+
+  if (existing) {
+    throw new Error(
+      "An assignment with this title already exists for this lesson.",
+    );
   }
 
   const assignment = await Assignment.create({
@@ -61,16 +81,22 @@ const createAssignment = async (data, tutorId) => {
     createdBy: tutorId,
   });
 
+  const populatedAssignment = await Assignment.findById(assignment._id)
+    .populate("lesson", "title")
+    .populate("module", "title")
+    .populate("course", "title slug")
+    .populate("createdBy", "firstName lastName");
+
   return {
     success: true,
     message: "Assignment created successfully.",
-    data: assignment,
+    data: populatedAssignment,
   };
 };
 
-// =========================
+// ======================================
 // Get Assignment By ID
-// =========================
+// ======================================
 const getAssignmentById = async (assignmentId) => {
   const assignment = await Assignment.findById(assignmentId)
     .populate("lesson", "title")
@@ -89,12 +115,34 @@ const getAssignmentById = async (assignmentId) => {
   };
 };
 
-// =========================
+// ======================================
 // Get Course Assignments
-// =========================
-const getCourseAssignments = async (courseId) => {
+// ======================================
+const getCourseAssignments = async (courseId, publishedOnly = false) => {
+  const filter = { course: courseId };
+
+  if (publishedOnly) {
+    filter.status = "published";
+  }
+
+  const assignments = await Assignment.find(filter)
+    .populate("lesson", "title")
+    .sort({ createdAt: -1 });
+
+  return {
+    success: true,
+    message: "Assignments retrieved successfully.",
+    data: assignments,
+  };
+};
+
+// ======================================
+// Get Lesson Assignments
+// ======================================
+const getAssignmentsByLesson = async (lessonId) => {
   const assignments = await Assignment.find({
-    course: courseId,
+    lesson: lessonId,
+    status: "published",
   }).sort({ createdAt: -1 });
 
   return {
@@ -104,9 +152,9 @@ const getCourseAssignments = async (courseId) => {
   };
 };
 
-// =========================
+// ======================================
 // Update Assignment
-// =========================
+// ======================================
 const updateAssignment = async (assignmentId, updateData) => {
   const assignment = await Assignment.findById(assignmentId);
 
@@ -114,20 +162,34 @@ const updateAssignment = async (assignmentId, updateData) => {
     throw new Error("Assignment not found.");
   }
 
+  if (
+    updateData.maxScore &&
+    updateData.passingScore &&
+    updateData.passingScore > updateData.maxScore
+  ) {
+    throw new Error("Passing score cannot exceed maximum score.");
+  }
+
   Object.assign(assignment, updateData);
 
   await assignment.save();
 
+  const updatedAssignment = await Assignment.findById(assignment._id)
+    .populate("lesson", "title")
+    .populate("module", "title")
+    .populate("course", "title slug")
+    .populate("createdBy", "firstName lastName");
+
   return {
     success: true,
     message: "Assignment updated successfully.",
-    data: assignment,
+    data: updatedAssignment,
   };
 };
 
-// =========================
+// ======================================
 // Delete Assignment
-// =========================
+// ======================================
 const deleteAssignment = async (assignmentId) => {
   const assignment = await Assignment.findById(assignmentId);
 
@@ -143,14 +205,18 @@ const deleteAssignment = async (assignmentId) => {
   };
 };
 
-// =========================
+// ======================================
 // Publish Assignment
-// =========================
+// ======================================
 const publishAssignment = async (assignmentId) => {
   const assignment = await Assignment.findById(assignmentId);
 
   if (!assignment) {
     throw new Error("Assignment not found.");
+  }
+
+  if (assignment.status === "published") {
+    throw new Error("Assignment is already published.");
   }
 
   assignment.status = "published";
@@ -168,6 +234,7 @@ module.exports = {
   createAssignment,
   getAssignmentById,
   getCourseAssignments,
+  getAssignmentsByLesson,
   updateAssignment,
   deleteAssignment,
   publishAssignment,

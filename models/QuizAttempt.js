@@ -6,18 +6,21 @@ const quizAttemptSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Quiz",
       required: true,
+      index: true,
     },
 
     student: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
+      index: true,
     },
 
     enrollment: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Enrollment",
       required: true,
+      index: true,
     },
 
     attemptNumber: {
@@ -25,7 +28,6 @@ const quizAttemptSchema = new mongoose.Schema(
       default: 1,
     },
 
-    // Student answers
     answers: [
       {
         question: {
@@ -36,7 +38,7 @@ const quizAttemptSchema = new mongoose.Schema(
 
         selectedAnswer: {
           type: String,
-          required: true,
+          default: "",
         },
 
         isCorrect: {
@@ -61,7 +63,17 @@ const quizAttemptSchema = new mongoose.Schema(
       default: null,
     },
 
+    timeSpent: {
+      type: Number,
+      default: 0,
+    },
+
     score: {
+      type: Number,
+      default: 0,
+    },
+
+    totalMarks: {
       type: Number,
       default: 0,
     },
@@ -81,10 +93,29 @@ const quizAttemptSchema = new mongoose.Schema(
       enum: ["in_progress", "submitted", "graded"],
       default: "in_progress",
     },
+
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,
   },
 );
+
+quizAttemptSchema.index({
+  quiz: 1,
+  student: 1,
+});
+
+quizAttemptSchema.index({
+  enrollment: 1,
+});
 
 module.exports = mongoose.model("QuizAttempt", quizAttemptSchema);

@@ -4,11 +4,13 @@ const {
   getQuizById,
   updateQuiz,
   deleteQuiz,
+  restoreQuiz,
 } = require("../services/quizService");
 
-// @desc Create Quiz
+// ======================================
+// Create Quiz
 // @route POST /api/quizzes
-// @access Tutor/Admin
+// ======================================
 const createNewQuiz = async (req, res) => {
   try {
     const result = await createQuiz(req.body, req.user._id);
@@ -17,16 +19,17 @@ const createNewQuiz = async (req, res) => {
   } catch (error) {
     console.error("Create Quiz Error:", error);
 
-    return res.status(500).json({
+    return res.status(400).json({
       success: false,
       message: error.message,
     });
   }
 };
 
-// @desc Get All Quizzes
+// ======================================
+// Get All Quizzes
 // @route GET /api/quizzes
-// @access Public
+// ======================================
 const getQuizzes = async (req, res) => {
   try {
     const result = await getAllQuizzes();
@@ -42,9 +45,10 @@ const getQuizzes = async (req, res) => {
   }
 };
 
-// @desc Get Single Quiz
+// ======================================
+// Get Quiz By ID
 // @route GET /api/quizzes/:id
-// @access Public
+// ======================================
 const getQuiz = async (req, res) => {
   try {
     const result = await getQuizById(req.params.id);
@@ -60,9 +64,10 @@ const getQuiz = async (req, res) => {
   }
 };
 
-// @desc Update Quiz
+// ======================================
+// Update Quiz
 // @route PUT /api/quizzes/:id
-// @access Tutor/Admin
+// ======================================
 const updateExistingQuiz = async (req, res) => {
   try {
     const result = await updateQuiz(req.params.id, req.body);
@@ -71,16 +76,17 @@ const updateExistingQuiz = async (req, res) => {
   } catch (error) {
     console.error("Update Quiz Error:", error);
 
-    return res.status(500).json({
+    return res.status(400).json({
       success: false,
       message: error.message,
     });
   }
 };
 
-// @desc Delete Quiz
+// ======================================
+// Delete Quiz (Soft Delete)
 // @route DELETE /api/quizzes/:id
-// @access Tutor/Admin
+// ======================================
 const deleteExistingQuiz = async (req, res) => {
   try {
     const result = await deleteQuiz(req.params.id);
@@ -89,7 +95,26 @@ const deleteExistingQuiz = async (req, res) => {
   } catch (error) {
     console.error("Delete Quiz Error:", error);
 
-    return res.status(500).json({
+    return res.status(404).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// ======================================
+// Restore Quiz
+// @route PATCH /api/quizzes/restore/:id
+// ======================================
+const restoreExistingQuiz = async (req, res) => {
+  try {
+    const result = await restoreQuiz(req.params.id);
+
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error("Restore Quiz Error:", error);
+
+    return res.status(404).json({
       success: false,
       message: error.message,
     });
@@ -102,4 +127,5 @@ module.exports = {
   getQuiz,
   updateExistingQuiz,
   deleteExistingQuiz,
+  restoreExistingQuiz,
 };

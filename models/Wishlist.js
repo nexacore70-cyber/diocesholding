@@ -6,12 +6,20 @@ const wishlistSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
+      index: true,
     },
 
     course: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Course",
       required: true,
+      index: true,
+    },
+
+    isDeleted: {
+      type: Boolean,
+      default: false,
+      index: true,
     },
   },
   {
@@ -19,7 +27,9 @@ const wishlistSchema = new mongoose.Schema(
   },
 );
 
-// Prevent duplicate wishlist entries
+// ======================================
+// Prevent Duplicate Wishlist Entries
+// ======================================
 wishlistSchema.index(
   {
     student: 1,

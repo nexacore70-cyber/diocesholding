@@ -12,7 +12,9 @@ const {
 const { protect } = require("../middleware/authMiddleware");
 const authorize = require("../middleware/authorize");
 
+// ======================================
 // Test Route
+// ======================================
 router.get("/test", (req, res) => {
   res.json({
     success: true,
@@ -20,11 +22,19 @@ router.get("/test", (req, res) => {
   });
 });
 
+// ======================================
+// Public Routes
+// ======================================
+
 // Get All Questions
 router.get("/", getQuestions);
 
 // Get Single Question
 router.get("/:id", getQuestion);
+
+// ======================================
+// Tutor/Admin Routes
+// ======================================
 
 // Create Question
 router.post("/", protect, authorize("tutor", "admin"), createNewQuestion);

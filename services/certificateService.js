@@ -7,12 +7,9 @@ const Certificate = require("../models/Certificate");
 const Enrollment = require("../models/Enrollment");
 const { createNotification } = require("./notificationService");
 
-// =========================
-// Generate Certificate Number
-// =========================
-// =========================
+// ======================================
 // Generate Unique Certificate Number
-// =========================
+// ======================================
 const generateCertificateNumber = async () => {
   let certificateNumber;
   let exists = true;
@@ -31,9 +28,9 @@ const generateCertificateNumber = async () => {
   return certificateNumber;
 };
 
-// =========================
+// ======================================
 // Generate PDF Certificate
-// =========================
+// ======================================
 const generateCertificatePDF = (certificate, student, course) => {
   return new Promise((resolve, reject) => {
     const folderPath = path.join(__dirname, "../uploads/certificates");
@@ -56,10 +53,6 @@ const generateCertificatePDF = (certificate, student, course) => {
     const stream = fs.createWriteStream(filePath);
 
     doc.pipe(stream);
-
-    // =========================
-    // Header
-    // =========================
 
     doc.fontSize(30).text("NexaCore Academy", {
       align: "center",
@@ -121,8 +114,10 @@ const generateCertificatePDF = (certificate, student, course) => {
 
     doc.text(`Verification Code: ${certificate.verificationCode}`);
 
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+
     doc.text(
-      `Verification URL: https://academy.nexacore.com/verify/${certificate.verificationCode}`,
+      `Verification URL: ${frontendUrl}/verify/${certificate.verificationCode}`,
     );
 
     doc.text(`Issued On: ${certificate.issuedAt.toDateString()}`);
@@ -143,9 +138,9 @@ const generateCertificatePDF = (certificate, student, course) => {
   });
 };
 
-// =========================
+// ======================================
 // Issue Certificate
-// =========================
+// ======================================
 const issueCertificate = async (enrollmentId, issuedBy) => {
   const enrollment = await Enrollment.findById(enrollmentId)
     .populate("student")
@@ -173,6 +168,15 @@ const issueCertificate = async (enrollmentId, issuedBy) => {
     throw new Error("Certificate has already been issued.");
   }
 
+  const existingCertificate = await Certificate.findOne({
+    enrollment: enrollment._id,
+    isDeleted: false,
+  });
+
+  if (existingCertificate) {
+    throw new Error("Certificate already exists for this enrollment.");
+  }
+
   const certificate = await Certificate.create({
     student: enrollment.student._id,
     course: enrollment.course._id,
@@ -181,8 +185,6 @@ const issueCertificate = async (enrollmentId, issuedBy) => {
     verificationCode: crypto.randomUUID(),
     issuedBy,
   });
-
-  // Generate PDF
 
   const pdfUrl = await generateCertificatePDF(
     certificate,
@@ -219,9 +221,12 @@ const getMyCertificates = async (studentId) => {
   const certificates = await Certificate.find({
     student: studentId,
     status: "issued",
+    isDeleted: false,
   })
     .populate("course", "title slug")
-    .sort({ createdAt: -1 });
+    .sort({
+      createdAt: -1,
+    });
 
   return {
     success: true,
@@ -234,7 +239,10 @@ const getMyCertificates = async (studentId) => {
 // Get Certificate By ID
 // =========================
 const getCertificateById = async (certificateId) => {
-  const certificate = await Certificate.findById(certificateId)
+  const certificate = await Certificate.findOne({
+    _id: certificateId,
+    isDeleted: false,
+  })
     .populate("student", "firstName lastName email")
     .populate("course", "title slug")
     .populate("issuedBy", "firstName lastName");
@@ -257,6 +265,7 @@ const verifyCertificate = async (verificationCode) => {
   const certificate = await Certificate.findOne({
     verificationCode,
     status: "issued",
+    isDeleted: false,
   })
     .populate("student", "firstName lastName")
     .populate("course", "title slug");
@@ -275,8 +284,14 @@ const verifyCertificate = async (verificationCode) => {
 // =========================
 // Revoke Certificate
 // =========================
-const revokeCertificate = async (certificateId) => {
-  const certificate = await Certificate.findById(certificateId);
+const revokeCertificate = async (
+  certificateId,
+  reason = "No reason provided",
+) => {
+  const certificate = await Certificate.findOne({
+    _id: certificateId,
+    isDeleted: false,
+  });
 
   if (!certificate) {
     throw new Error("Certificate not found.");
@@ -287,6 +302,8 @@ const revokeCertificate = async (certificateId) => {
   }
 
   certificate.status = "revoked";
+  certificate.revokedAt = new Date();
+  certificate.revokedReason = reason;
 
   await certificate.save();
 
@@ -297,10 +314,59 @@ const revokeCertificate = async (certificateId) => {
   };
 };
 
+// =========================
+// Soft Delete Certificate
+// =========================
+const deleteCertificate = async (certificateId) => {
+  const certificate = await Certificate.findOne({
+    _id: certificateId,
+    isDeleted: false,
+  });
+
+  if (!certificate) {
+    throw new Error("Certificate not found.");
+  }
+
+  certificate.isDeleted = true;
+
+  await certificate.save();
+
+  return {
+    success: true,
+    message: "Certificate deleted successfully.",
+  };
+};
+
+// =========================
+// Restore Certificate
+// =========================
+const restoreCertificate = async (certificateId) => {
+  const certificate = await Certificate.findOne({
+    _id: certificateId,
+    isDeleted: true,
+  });
+
+  if (!certificate) {
+    throw new Error("Certificate not found.");
+  }
+
+  certificate.isDeleted = false;
+
+  await certificate.save();
+
+  return {
+    success: true,
+    message: "Certificate restored successfully.",
+    data: certificate,
+  };
+};
+
 module.exports = {
   issueCertificate,
   getMyCertificates,
   getCertificateById,
   verifyCertificate,
   revokeCertificate,
+  deleteCertificate,
+  restoreCertificate,
 };

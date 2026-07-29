@@ -2,16 +2,17 @@ const {
   createAssignment,
   getAssignmentById,
   getCourseAssignments,
+  getAssignmentsByLesson,
   updateAssignment,
   deleteAssignment,
   publishAssignment,
 } = require("../services/assignmentService");
 
-// =========================
+// ======================================
 // Create Assignment
-// =========================
 // @route POST /api/assignments
 // @access Tutor/Admin
+// ======================================
 const createNewAssignment = async (req, res) => {
   try {
     const result = await createAssignment(req.body, req.user._id);
@@ -27,11 +28,11 @@ const createNewAssignment = async (req, res) => {
   }
 };
 
-// =========================
+// ======================================
 // Get Assignment By ID
-// =========================
 // @route GET /api/assignments/:id
 // @access Authenticated
+// ======================================
 const getAssignment = async (req, res) => {
   try {
     const result = await getAssignmentById(req.params.id);
@@ -47,14 +48,19 @@ const getAssignment = async (req, res) => {
   }
 };
 
-// =========================
+// ======================================
 // Get Course Assignments
-// =========================
 // @route GET /api/assignments/course/:courseId
 // @access Authenticated
+// ======================================
 const getAssignmentsByCourse = async (req, res) => {
   try {
-    const result = await getCourseAssignments(req.params.courseId);
+    const publishedOnly = req.user?.roles?.includes("student");
+
+    const result = await getCourseAssignments(
+      req.params.courseId,
+      publishedOnly,
+    );
 
     return res.status(200).json(result);
   } catch (error) {
@@ -67,11 +73,31 @@ const getAssignmentsByCourse = async (req, res) => {
   }
 };
 
-// =========================
+// ======================================
+// Get Lesson Assignments
+// @route GET /api/assignments/lesson/:lessonId
+// @access Authenticated
+// ======================================
+const getLessonAssignments = async (req, res) => {
+  try {
+    const result = await getAssignmentsByLesson(req.params.lessonId);
+
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error("Get Lesson Assignments Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// ======================================
 // Update Assignment
-// =========================
 // @route PUT /api/assignments/:id
 // @access Tutor/Admin
+// ======================================
 const updateAssignmentDetails = async (req, res) => {
   try {
     const result = await updateAssignment(req.params.id, req.body);
@@ -87,11 +113,11 @@ const updateAssignmentDetails = async (req, res) => {
   }
 };
 
-// =========================
+// ======================================
 // Delete Assignment
-// =========================
 // @route DELETE /api/assignments/:id
 // @access Tutor/Admin
+// ======================================
 const removeAssignment = async (req, res) => {
   try {
     const result = await deleteAssignment(req.params.id);
@@ -107,11 +133,11 @@ const removeAssignment = async (req, res) => {
   }
 };
 
-// =========================
+// ======================================
 // Publish Assignment
-// =========================
 // @route PATCH /api/assignments/:id/publish
 // @access Tutor/Admin
+// ======================================
 const publishAssignmentNow = async (req, res) => {
   try {
     const result = await publishAssignment(req.params.id);
@@ -131,6 +157,7 @@ module.exports = {
   createNewAssignment,
   getAssignment,
   getAssignmentsByCourse,
+  getLessonAssignments,
   updateAssignmentDetails,
   removeAssignment,
   publishAssignmentNow,

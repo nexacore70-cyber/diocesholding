@@ -6,9 +6,11 @@ const {
   deleteQuestion,
 } = require("../services/questionService");
 
-// @desc Create Question
+// ======================================
+// Create Question
 // @route POST /api/questions
 // @access Tutor/Admin
+// ======================================
 const createNewQuestion = async (req, res) => {
   try {
     const result = await createQuestion(req.body, req.user._id);
@@ -17,16 +19,18 @@ const createNewQuestion = async (req, res) => {
   } catch (error) {
     console.error("Create Question Error:", error);
 
-    return res.status(500).json({
+    return res.status(400).json({
       success: false,
       message: error.message,
     });
   }
 };
 
-// @desc Get All Questions
+// ======================================
+// Get All Questions
 // @route GET /api/questions
 // @access Public
+// ======================================
 const getQuestions = async (req, res) => {
   try {
     const result = await getAllQuestions();
@@ -42,9 +46,11 @@ const getQuestions = async (req, res) => {
   }
 };
 
-// @desc Get Single Question
+// ======================================
+// Get Single Question
 // @route GET /api/questions/:id
 // @access Public
+// ======================================
 const getQuestion = async (req, res) => {
   try {
     const result = await getQuestionById(req.params.id);
@@ -60,9 +66,11 @@ const getQuestion = async (req, res) => {
   }
 };
 
-// @desc Update Question
+// ======================================
+// Update Question
 // @route PUT /api/questions/:id
 // @access Tutor/Admin
+// ======================================
 const updateExistingQuestion = async (req, res) => {
   try {
     const result = await updateQuestion(req.params.id, req.body);
@@ -71,16 +79,18 @@ const updateExistingQuestion = async (req, res) => {
   } catch (error) {
     console.error("Update Question Error:", error);
 
-    return res.status(500).json({
+    return res.status(400).json({
       success: false,
       message: error.message,
     });
   }
 };
 
-// @desc Delete Question
+// ======================================
+// Delete Question
 // @route DELETE /api/questions/:id
 // @access Tutor/Admin
+// ======================================
 const deleteExistingQuestion = async (req, res) => {
   try {
     const result = await deleteQuestion(req.params.id);
@@ -89,7 +99,7 @@ const deleteExistingQuestion = async (req, res) => {
   } catch (error) {
     console.error("Delete Question Error:", error);
 
-    return res.status(500).json({
+    return res.status(404).json({
       success: false,
       message: error.message,
     });

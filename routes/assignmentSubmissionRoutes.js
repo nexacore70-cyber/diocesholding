@@ -11,9 +11,9 @@ const {
 const { protect } = require("../middleware/authMiddleware");
 const authorize = require("../middleware/authorize");
 
-// =========================
+// ======================================
 // Test Route
-// =========================
+// ======================================
 router.get("/test", (req, res) => {
   res.json({
     success: true,
@@ -21,11 +21,12 @@ router.get("/test", (req, res) => {
   });
 });
 
-// =========================
+// ======================================
 // Student Routes
-// =========================
+// ======================================
 
 // Submit Assignment
+// POST /api/assignment-submissions/:assignmentId/submit
 router.post(
   "/:assignmentId/submit",
   protect,
@@ -33,7 +34,8 @@ router.post(
   submitStudentAssignment,
 );
 
-// My Submissions
+// Get My Submissions
+// GET /api/assignment-submissions/my-submissions
 router.get(
   "/my-submissions",
   protect,
@@ -41,14 +43,16 @@ router.get(
   getStudentSubmissions,
 );
 
-// =========================
+// ======================================
 // Tutor/Admin Routes
-// =========================
+// ======================================
 
 // View Submission
+// GET /api/assignment-submissions/:id
 router.get("/:id", protect, authorize("tutor", "admin"), getSubmission);
 
 // Grade Submission
+// PATCH /api/assignment-submissions/:id/grade
 router.patch(
   "/:id/grade",
   protect,

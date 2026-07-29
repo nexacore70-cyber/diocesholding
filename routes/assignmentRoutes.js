@@ -5,6 +5,7 @@ const {
   createNewAssignment,
   getAssignment,
   getAssignmentsByCourse,
+  getLessonAssignments,
   updateAssignmentDetails,
   removeAssignment,
   publishAssignmentNow,
@@ -13,9 +14,9 @@ const {
 const { protect } = require("../middleware/authMiddleware");
 const authorize = require("../middleware/authorize");
 
-// =========================
+// ======================================
 // Test Route
-// =========================
+// ======================================
 router.get("/test", (req, res) => {
   res.json({
     success: true,
@@ -23,24 +24,44 @@ router.get("/test", (req, res) => {
   });
 });
 
-// =========================
-// Student & Tutor
-// =========================
+// ======================================
+// Student / Tutor / Admin
+// ======================================
 
-// Get Assignment By ID
-router.get("/:id", protect, getAssignment);
+// Get all assignments for a course
+router.get(
+  "/course/:courseId",
+  protect,
+  getAssignmentsByCourse,
+);
 
-// Get Course Assignments
-router.get("/course/:courseId", protect, getAssignmentsByCourse);
+// Get all assignments for a lesson
+router.get(
+  "/lesson/:lessonId",
+  protect,
+  getLessonAssignments,
+);
 
-// =========================
-// Tutor/Admin
-// =========================
+// Get single assignment
+router.get(
+  "/:id",
+  protect,
+  getAssignment,
+);
 
-// Create Assignment
-router.post("/", protect, authorize("tutor", "admin"), createNewAssignment);
+// ======================================
+// Tutor / Admin
+// ======================================
 
-// Update Assignment
+// Create assignment
+router.post(
+  "/",
+  protect,
+  authorize("tutor", "admin"),
+  createNewAssignment,
+);
+
+// Update assignment
 router.put(
   "/:id",
   protect,
@@ -48,15 +69,20 @@ router.put(
   updateAssignmentDetails,
 );
 
-// Delete Assignment
-router.delete("/:id", protect, authorize("tutor", "admin"), removeAssignment);
-
-// Publish Assignment
+// Publish assignment
 router.patch(
   "/:id/publish",
   protect,
   authorize("tutor", "admin"),
   publishAssignmentNow,
+);
+
+// Delete assignment
+router.delete(
+  "/:id",
+  protect,
+  authorize("tutor", "admin"),
+  removeAssignment,
 );
 
 module.exports = router;

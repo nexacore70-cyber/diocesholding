@@ -2,6 +2,7 @@ const {
   addToWishlist,
   getMyWishlist,
   removeFromWishlist,
+  restoreWishlistItem,
 } = require("../services/wishlistService");
 
 // ======================================
@@ -45,7 +46,7 @@ const getWishlist = async (req, res) => {
 };
 
 // ======================================
-// Remove Wishlist Item
+// Remove Wishlist Item (Soft Delete)
 // DELETE /api/wishlist/:id
 // ======================================
 const deleteWishlist = async (req, res) => {
@@ -63,8 +64,28 @@ const deleteWishlist = async (req, res) => {
   }
 };
 
+// ======================================
+// Restore Wishlist Item
+// PATCH /api/wishlist/restore/:id
+// ======================================
+const restoreWishlist = async (req, res) => {
+  try {
+    const result = await restoreWishlistItem(req.params.id, req.user._id);
+
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error("Restore Wishlist Error:", error);
+
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 module.exports = {
   createWishlist,
   getWishlist,
   deleteWishlist,
+  restoreWishlist,
 };
