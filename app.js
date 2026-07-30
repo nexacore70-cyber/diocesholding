@@ -27,6 +27,12 @@ const categoryRoutes = require("./routes/categoryRoutes");
 const tutorDashboardRoutes = require("./routes/tutorDashboardRoutes");
 const studentDashboardRoutes = require("./routes/studentDashboardRoutes");
 const uploadRoutes = require("./routes/uploadRoutes");
+const assessmentRoutes = require("./routes/assessmentRoutes");
+const assessmentAttemptRoutes = require("./routes/assessmentAttemptRoutes");
+const assessmentQuestionRoutes = require("./routes/assessmentQuestionRoutes");
+const liveClassRoutes = require("./routes/liveClassRoutes");
+const conversationRoutes = require("./routes/conversationRoutes");
+const messageRoutes = require("./routes/messageRoutes");
 
 const app = express();
 
@@ -59,6 +65,12 @@ app.use("/api/categories", categoryRoutes);
 app.use("/api/tutor-dashboard", tutorDashboardRoutes);
 app.use("/api/student-dashboard", studentDashboardRoutes);
 app.use("/api/uploads", uploadRoutes);
+app.use("/api/assessments", assessmentRoutes);
+app.use("/api/assessment-attempts", assessmentAttemptRoutes);
+app.use("/api/assessment-questions", assessmentQuestionRoutes);
+app.use("/api/live-classes", liveClassRoutes);
+app.use("/api/conversations", conversationRoutes);
+app.use("/api/messages", messageRoutes);
 
 app.get("/", (req, res) => {
   res.json({

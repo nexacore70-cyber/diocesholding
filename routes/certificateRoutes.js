@@ -54,7 +54,7 @@ router.get("/:id", protect, getCertificate);
 router.post(
   "/issue/:enrollmentId",
   protect,
-  authorize("tutor", "admin"),
+  authorize("admin"),
   issueStudentCertificate,
 );
 
@@ -62,7 +62,7 @@ router.post(
 router.patch(
   "/revoke/:id",
   protect,
-  authorize("tutor", "admin"),
+  authorize("admin"),
   revokeStudentCertificate,
 );
 

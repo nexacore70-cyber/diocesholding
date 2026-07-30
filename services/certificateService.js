@@ -3,6 +3,7 @@ const fs = require("fs");
 const path = require("path");
 const PDFDocument = require("pdfkit");
 
+const User = require("../models/User");
 const Certificate = require("../models/Certificate");
 const Enrollment = require("../models/Enrollment");
 const { createNotification } = require("./notificationService");
@@ -142,6 +143,16 @@ const generateCertificatePDF = (certificate, student, course) => {
 // Issue Certificate
 // ======================================
 const issueCertificate = async (enrollmentId, issuedBy) => {
+  const admin = await User.findById(issuedBy);
+
+  if (!admin) {
+    throw new Error("User not found.");
+  }
+
+  if (admin.role !== "admin") {
+    throw new Error("Only administrators can issue certificates.");
+  }
+
   const enrollment = await Enrollment.findById(enrollmentId)
     .populate("student")
     .populate({

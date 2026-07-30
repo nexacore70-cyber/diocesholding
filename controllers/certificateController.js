@@ -11,7 +11,7 @@ const {
 // ======================================
 // Issue Certificate
 // POST /api/certificates/issue/:enrollmentId
-// Tutor/Admin
+// Admin
 // ======================================
 const issueStudentCertificate = async (req, res) => {
   try {
@@ -94,7 +94,7 @@ const verifyStudentCertificate = async (req, res) => {
 // ======================================
 // Revoke Certificate
 // PATCH /api/certificates/revoke/:id
-// Tutor/Admin
+// Admin
 // ======================================
 const revokeStudentCertificate = async (req, res) => {
   try {

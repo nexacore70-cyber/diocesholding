@@ -102,6 +102,31 @@ const userSchema = new mongoose.Schema(
       default: null,
     },
 
+    isOnline: {
+      type: Boolean,
+      default: false,
+    },
+
+    lastSeen: {
+      type: Date,
+      default: null,
+    },
+
+    presence: {
+      type: String,
+      enum: [
+        "online",
+        "offline",
+        "typing",
+        "recording",
+        "uploading",
+        "busy",
+        "in-call",
+        "away",
+      ],
+      default: "offline",
+    },
+
     // Password Reset
     passwordResetToken: {
       type: String,
