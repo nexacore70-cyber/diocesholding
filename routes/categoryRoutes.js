@@ -13,23 +13,57 @@ const {
   getCategoryAnalytics,
 } = require("../controllers/categoryController");
 
-const {protect} = require("../middleware/authMiddleware");
+const { protect } = require("../middleware/authMiddleware");
 const authorize = require("../middleware/authorize");
 
 const router = express.Router();
 
-console.log("createNewCategory:", typeof createNewCategory);
-console.log("getCategories:", typeof getCategories);
+// ======================================
+// Authorization
+// ======================================
 
 const adminOnly = authorize("admin");
 
-console.log("adminOnly:", typeof adminOnly);
-
 // ======================================
-// Category CRUD
+// Public Routes
 // ======================================
 
-// Create Category
+// Get all active categories
+router.get("/", getCategories);
+
+// Get featured categories
+router.get("/featured", getFeaturedCategoryList);
+
+// Get parent categories
+router.get("/parents", getParentCategoryList);
+
+// Get category by slug
+router.get("/slug/:slug", getSingleCategoryBySlug);
+
+// ======================================
+// Protected Admin Routes
+// ======================================
+
+// Category statistics
+router.get(
+  "/statistics",
+  protect,
+  adminOnly,
+  getCategoryAnalytics,
+);
+
+// ======================================
+// Dynamic Public Route
+// ======================================
+
+// Get category by ID
+router.get("/:id", getSingleCategory);
+
+// ======================================
+// Protected Admin CRUD Routes
+// ======================================
+
+// Create category
 router.post(
   "/",
   protect,
@@ -37,50 +71,27 @@ router.post(
   createNewCategory,
 );
 
-// Get All Categories
-router.get("/", getCategories);
-
-// Get Featured Categories
-router.get("/featured", getFeaturedCategoryList);
-
-// Get Parent Categories
-router.get("/parents", getParentCategoryList);
-
-// Category Statistics
-router.get(
-  "/statistics",
-  protect,
-  authorize("admin"),
-  getCategoryAnalytics,
-);
-
-// Get Category By Slug
-router.get("/slug/:slug", getSingleCategoryBySlug);
-
-// Get Category By ID
-router.get("/:id", getSingleCategory);
-
-// Update Category
+// Update category
 router.put(
   "/:id",
   protect,
-  authorize("admin"),
+  adminOnly,
   updateExistingCategory,
 );
 
-// Soft Delete Category
+// Soft delete category
 router.delete(
   "/:id",
   protect,
-  authorize("admin"),
+  adminOnly,
   removeCategory,
 );
 
-// Restore Category
+// Restore category
 router.patch(
   "/restore/:id",
   protect,
-  authorize("admin"),
+  adminOnly,
   restoreDeletedCategory,
 );
 

@@ -1,67 +1,363 @@
+const mongoose = require("mongoose");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 
+// ======================================
+// Configuration
+// ======================================
+
+const JWT_ALGORITHM = "HS256";
+const LAST_SEEN_UPDATE_INTERVAL = 5 * 60 * 1000;
+
+// ======================================
+// Authentication Error
+// ======================================
+
+const authenticationError = (res, message = "Authentication required.") => {
+  return res.status(401).json({
+    success: false,
+    message,
+  });
+};
+
+// ======================================
+// Account Authorization Error
+// ======================================
+
+const accountError = (res, message) => {
+  return res.status(403).json({
+    success: false,
+    message,
+  });
+};
+
+// ======================================
+// Validate JWT Configuration
+// ======================================
+
+const validateJwtConfiguration = () => {
+  const secret = process.env.JWT_SECRET;
+
+  if (!secret || typeof secret !== "string") {
+    return false;
+  }
+
+  if (secret.length < 32) {
+    return false;
+  }
+
+  return true;
+};
+
+// ======================================
+// Validate JWT Payload
+// ======================================
+
+const isValidJwtPayload = (decoded) => {
+  if (!decoded || typeof decoded !== "object") {
+    return false;
+  }
+
+  if (!decoded.id || typeof decoded.id !== "string") {
+    return false;
+  }
+
+  if (!mongoose.Types.ObjectId.isValid(decoded.id)) {
+    return false;
+  }
+
+  return true;
+};
+
+// ======================================
+// Check Password Change
+// ======================================
+//
+// Invalidates tokens issued before the user's
+// password was changed.
+//
+
+const isTokenIssuedBeforePasswordChange = (decoded, user) => {
+  if (!decoded?.iat) {
+    return false;
+  }
+
+  if (!user?.passwordChangedAt) {
+    return false;
+  }
+
+  const passwordChangedAt = new Date(user.passwordChangedAt);
+
+  if (Number.isNaN(passwordChangedAt.getTime())) {
+    return false;
+  }
+
+  const tokenIssuedAt = new Date(decoded.iat * 1000);
+
+  return tokenIssuedAt <= passwordChangedAt;
+};
+
+// ======================================
+// Update Last Seen
+// ======================================
+//
+// Do not update MongoDB on every request.
+// Last seen is updated at most once every
+// five minutes.
+//
+
+const updateLastSeen = async (user) => {
+  try {
+    const now = new Date();
+
+    const lastSeen = user.lastSeen ? new Date(user.lastSeen) : null;
+
+    const shouldUpdate =
+      !lastSeen ||
+      Number.isNaN(lastSeen.getTime()) ||
+      now.getTime() - lastSeen.getTime() >= LAST_SEEN_UPDATE_INTERVAL;
+
+    if (!shouldUpdate) {
+      return;
+    }
+
+    await User.updateOne(
+      {
+        _id: user._id,
+      },
+      {
+        $set: {
+          lastSeen: now,
+        },
+      },
+    );
+
+    user.lastSeen = now;
+  } catch (error) {
+    // Last-seen failure must never prevent
+    // an otherwise valid request.
+    console.error("Last Seen Update Error:", error.message);
+  }
+};
+
+// ======================================
+// Protect Routes
+// ======================================
+
 const protect = async (req, res, next) => {
   try {
-    let token;
+    // ======================================
+    // Validate JWT Configuration
+    // ======================================
 
-    // Check for Authorization header
-    if (
-      req.headers.authorization &&
-      req.headers.authorization.startsWith("Bearer ")
-    ) {
-      token = req.headers.authorization.split(" ")[1];
+    if (!validateJwtConfiguration()) {
+      console.error("Authentication Error: JWT_SECRET is missing or too weak.");
+
+      return res.status(500).json({
+        success: false,
+        message: "Authentication service is not properly configured.",
+      });
     }
+
+    // ======================================
+    // Get Authorization Header
+    // ======================================
+
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || typeof authHeader !== "string") {
+      return authenticationError(res);
+    }
+
+    // ======================================
+    // Validate Bearer Token
+    // ======================================
+
+    const parts = authHeader.trim().split(/\s+/);
+
+    if (parts.length !== 2 || parts[0].toLowerCase() !== "bearer") {
+      return authenticationError(res);
+    }
+
+    const token = parts[1]?.trim();
 
     if (!token) {
-      return res.status(401).json({
-        success: false,
-        message: "No authentication token provided.",
-      });
+      return authenticationError(res, "Authentication token is missing.");
     }
 
-    console.log("Received Token:", token);
-    console.log("JWT Secret:", process.env.JWT_SECRET);
-
+    // ======================================
     // Verify JWT
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    // ======================================
 
-    // Get user (exclude password)
-    const user = await User.findById(decoded.id).select("-password");
+    let decoded;
+
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET, {
+        algorithms: [JWT_ALGORITHM],
+      });
+    } catch (error) {
+      if (error.name === "TokenExpiredError") {
+        return authenticationError(res, "Authentication token has expired.");
+      }
+
+      if (error.name === "JsonWebTokenError") {
+        return authenticationError(res, "Invalid authentication token.");
+      }
+
+      if (error.name === "NotBeforeError") {
+        return authenticationError(
+          res,
+          "Authentication token is not yet active.",
+        );
+      }
+
+      return authenticationError(res, "Authentication failed.");
+    }
+
+    // ======================================
+    // Validate JWT Payload
+    // ======================================
+
+    if (!isValidJwtPayload(decoded)) {
+      return authenticationError(res, "Invalid authentication token.");
+    }
+
+    // ======================================
+    // Find User
+    // ======================================
+    //
+    // passwordChangedAt is explicitly selected
+    // because the User schema has select: false.
+    //
+
+    const user = await User.findOne({
+      _id: decoded.id,
+      deletedAt: null,
+    }).select("+passwordChangedAt");
+
+    // ======================================
+    // User Not Found
+    // ======================================
 
     if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: "User not found.",
-      });
+      return authenticationError(res, "User account not found.");
     }
 
-    // Check if account is active
-    if (!user.isActive || user.status !== "active") {
-      return res.status(403).json({
-        success: false,
-        message: "Your account has been deactivated. Please contact support.",
-      });
+    // ======================================
+    // Password Change Check
+    // ======================================
+
+    if (isTokenIssuedBeforePasswordChange(decoded, user)) {
+      return authenticationError(
+        res,
+        "Your authentication session has expired. Please log in again.",
+      );
     }
 
-    // Update last seen
-    user.lastSeen = new Date();
-    await user.save();
+    // ======================================
+    // Account Status
+    // ======================================
 
-    // Attach user to request
+    if (user.status === "banned") {
+      return accountError(res, "Your account has been banned.");
+    }
+
+    if (user.status === "suspended") {
+      return accountError(res, "Your account has been suspended.");
+    }
+
+    if (user.status === "pending") {
+      return accountError(res, "Your account is pending activation.");
+    }
+
+    if (user.status !== "active") {
+      return accountError(res, "Your account is not active.");
+    }
+
+    // ======================================
+    // Active Flag
+    // ======================================
+
+    if (user.isActive !== true) {
+      return accountError(res, "Your account has been deactivated.");
+    }
+
+    // ======================================
+    // Deleted Account
+    // ======================================
+
+    if (user.deletedAt) {
+      return accountError(res, "This account is no longer active.");
+    }
+
+    // ======================================
+    // Validate Roles
+    // ======================================
+    //
+    // Authorization middleware will determine
+    // whether the user has permission.
+    //
+
+    if (!Array.isArray(user.roles)) {
+      user.roles = [];
+    }
+
+    // ======================================
+    // Update Last Seen
+    // ======================================
+
+    await updateLastSeen(user);
+
+    // ======================================
+    // Attach User
+    // ======================================
+
     req.user = user;
 
-    next();
-  } catch (error) {
-    console.error("Authentication Error:", error.name);
-    console.error("Authentication Message:", error.message);
+    // ======================================
+    // Continue
+    // ======================================
 
-    return res.status(401).json({
+    return next();
+  } catch (error) {
+    console.error("Authentication Middleware Error:", error);
+
+    // ======================================
+    // MongoDB Errors
+    // ======================================
+
+    if (
+      error.name === "MongoServerError" ||
+      error.name === "MongoNetworkError"
+    ) {
+      return res.status(503).json({
+        success: false,
+        message: "Authentication service is temporarily unavailable.",
+      });
+    }
+
+    // ======================================
+    // Cast Error
+    // ======================================
+
+    if (error.name === "CastError") {
+      return authenticationError(res, "Invalid authentication credentials.");
+    }
+
+    // ======================================
+    // Generic Error
+    // ======================================
+
+    return res.status(500).json({
       success: false,
-      message: "Invalid or expired authentication token.",
+      message: "Authentication service error.",
     });
   }
 };
+
+// ======================================
+// Export
+// ======================================
 
 module.exports = {
   protect,

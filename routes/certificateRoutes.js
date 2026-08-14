@@ -1,4 +1,5 @@
 const express = require("express");
+
 const router = express.Router();
 
 const {
@@ -17,25 +18,29 @@ const authorize = require("../middleware/authorize");
 // ======================================
 // Test Route
 // ======================================
+
 router.get("/test", (req, res) => {
-  res.json({
+  return res.status(200).json({
     success: true,
     message: "Certificate routes are working.",
   });
 });
 
 // ======================================
-// Public Routes
+// Public
 // ======================================
 
-// Verify Certificate
-router.get("/verify/:verificationCode", verifyStudentCertificate);
+// Verify certificate
+router.get(
+  "/verify/:verificationCode",
+  verifyStudentCertificate,
+);
 
 // ======================================
-// Student Routes
+// Student
 // ======================================
 
-// Get My Certificates
+// Get student's certificates
 router.get(
   "/my-certificates",
   protect,
@@ -43,14 +48,25 @@ router.get(
   getStudentCertificates,
 );
 
-// Get Certificate By ID
-router.get("/:id", protect, getCertificate);
-
 // ======================================
-// Tutor/Admin Routes
+// Authenticated
 // ======================================
 
-// Issue Certificate
+// Get certificate
+//
+// Students can only access their own certificate.
+// Admins can access any certificate.
+router.get(
+  "/:id",
+  protect,
+  getCertificate,
+);
+
+// ======================================
+// Admin
+// ======================================
+
+// Issue certificate
 router.post(
   "/issue/:enrollmentId",
   protect,
@@ -58,7 +74,7 @@ router.post(
   issueStudentCertificate,
 );
 
-// Revoke Certificate
+// Revoke certificate
 router.patch(
   "/revoke/:id",
   protect,
@@ -66,14 +82,15 @@ router.patch(
   revokeStudentCertificate,
 );
 
-// ======================================
-// Admin Routes
-// ======================================
+// Soft delete certificate
+router.delete(
+  "/:id",
+  protect,
+  authorize("admin"),
+  deleteStudentCertificate,
+);
 
-// Soft Delete Certificate
-router.delete("/:id", protect, authorize("admin"), deleteStudentCertificate);
-
-// Restore Certificate
+// Restore certificate
 router.patch(
   "/restore/:id",
   protect,

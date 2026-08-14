@@ -1,28 +1,221 @@
+// ======================================
+// Role Authorization Middleware
+// ======================================
+
+const VALID_ROLES = new Set([
+  "student",
+  "tutor",
+  "client",
+  "talent",
+  "staff",
+  "admin",
+  "intern",
+]);
+
+// ======================================
+// Normalize Roles
+// ======================================
+
+const normalizeRoles = (roles) => {
+  if (!Array.isArray(roles)) {
+    return [];
+  }
+
+  return [
+    ...new Set(
+      roles
+        .filter((role) => role !== null && role !== undefined)
+        .map((role) => String(role).trim().toLowerCase())
+        .filter(Boolean),
+    ),
+  ];
+};
+
+// ======================================
+// Role Authorization Middleware
+// ======================================
+
 const authorize = (...allowedRoles) => {
-  return (req, res, next) => {
-    if (!req.user) {
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized.",
-      });
-    }
+  // ======================================
+  // Normalize Allowed Roles
+  // ======================================
 
-    console.log("Allowed Roles:", allowedRoles);
-    console.log("User Roles:", req.user.roles);
+  const normalizedAllowedRoles = normalizeRoles(allowedRoles);
 
-    const hasPermission = req.user.roles.some((role) =>
-      allowedRoles.includes(role),
+  // ======================================
+  // Validate Authorization Configuration
+  // ======================================
+
+  const invalidAllowedRoles = normalizedAllowedRoles.filter(
+    (role) => !VALID_ROLES.has(role),
+  );
+
+  if (invalidAllowedRoles.length > 0) {
+    console.error(
+      "Authorization Configuration Error: Invalid roles:",
+      invalidAllowedRoles,
     );
+  }
 
-    if (!hasPermission) {
-      return res.status(403).json({
+  // ======================================
+  // Middleware
+  // ======================================
+
+  return (req, res, next) => {
+    try {
+      // ======================================
+      // Authentication Check
+      // ======================================
+
+      if (!req.user || !req.user._id) {
+        return res.status(401).json({
+          success: false,
+          message: "Authentication required.",
+        });
+      }
+
+      // ======================================
+      // Authorization Configuration Check
+      // ======================================
+
+      if (normalizedAllowedRoles.length === 0) {
+        console.error(
+          "Authorization Error: No allowed roles configured for route.",
+        );
+
+        return res.status(500).json({
+          success: false,
+          message: "Authorization configuration error.",
+        });
+      }
+
+      // ======================================
+      // Reject Invalid Route Configuration
+      // ======================================
+
+      if (invalidAllowedRoles.length > 0) {
+        return res.status(500).json({
+          success: false,
+          message: "Authorization configuration error.",
+        });
+      }
+
+      // ======================================
+      // Account Status
+      // ======================================
+
+      const status = String(req.user.status || "")
+        .trim()
+        .toLowerCase();
+
+      if (status === "banned") {
+        return res.status(403).json({
+          success: false,
+          message: "Your account has been banned.",
+        });
+      }
+
+      if (status === "suspended") {
+        return res.status(403).json({
+          success: false,
+          message: "Your account has been suspended.",
+        });
+      }
+
+      if (status === "pending") {
+        return res.status(403).json({
+          success: false,
+          message: "Your account is pending activation.",
+        });
+      }
+
+      if (status !== "active") {
+        return res.status(403).json({
+          success: false,
+          message: "Your account is not active.",
+        });
+      }
+
+      // ======================================
+      // Active Account Check
+      // ======================================
+
+      if (req.user.isActive !== true) {
+        return res.status(403).json({
+          success: false,
+          message: "This account is inactive.",
+        });
+      }
+
+      // ======================================
+      // Deleted Account Check
+      // ======================================
+
+      if (req.user.deletedAt) {
+        return res.status(403).json({
+          success: false,
+          message: "This account is no longer active.",
+        });
+      }
+
+      // ======================================
+      // Get User Roles
+      // ======================================
+
+      const normalizedUserRoles = normalizeRoles(req.user.roles);
+
+      // ======================================
+      // Validate User Roles
+      // ======================================
+
+      if (normalizedUserRoles.length === 0) {
+        console.error(
+          `Authorization Error: User ${req.user._id} has no valid roles.`,
+        );
+
+        return res.status(403).json({
+          success: false,
+          message: "Your account has no valid permissions.",
+        });
+      }
+
+      // ======================================
+      // Permission Check
+      // ======================================
+
+      const hasPermission = normalizedUserRoles.some((userRole) =>
+        normalizedAllowedRoles.includes(userRole),
+      );
+
+      // ======================================
+      // Permission Denied
+      // ======================================
+
+      if (!hasPermission) {
+        return res.status(403).json({
+          success: false,
+          message: "You do not have permission to access this resource.",
+        });
+      }
+
+      // ======================================
+      // Authorized
+      // ======================================
+
+      return next();
+    } catch (error) {
+      console.error("Authorization Middleware Error:", error);
+
+      return res.status(500).json({
         success: false,
-        message: "Access denied.",
+        message: "Authorization service error.",
       });
     }
-
-    next();
   };
 };
+
+// ======================================
+// Export
+// ======================================
 
 module.exports = authorize;

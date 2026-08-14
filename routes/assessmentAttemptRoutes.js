@@ -1,4 +1,5 @@
 const express = require("express");
+
 const router = express.Router();
 
 const {
@@ -10,10 +11,40 @@ const { protect } = require("../middleware/authMiddleware");
 const authorize = require("../middleware/authorize");
 
 // ======================================
-// Test Route
+// Safety checks
 // ======================================
+
+if (typeof protect !== "function") {
+  throw new TypeError(
+    "assessmentAttemptRoutes: protect middleware is not a function.",
+  );
+}
+
+if (typeof authorize !== "function") {
+  throw new TypeError(
+    "assessmentAttemptRoutes: authorize middleware is not a function.",
+  );
+}
+
+if (typeof startStudentAssessment !== "function") {
+  throw new TypeError(
+    "assessmentAttemptRoutes: startStudentAssessment is not a function.",
+  );
+}
+
+if (typeof submitStudentAssessment !== "function") {
+  throw new TypeError(
+    "assessmentAttemptRoutes: submitStudentAssessment is not a function.",
+  );
+}
+
+// ======================================
+// Test Route
+// GET /api/assessment-attempts/test
+// ======================================
+
 router.get("/test", (req, res) => {
-  res.json({
+  return res.status(200).json({
     success: true,
     message: "Assessment Attempt routes are working.",
   });
@@ -24,6 +55,8 @@ router.get("/test", (req, res) => {
 // ======================================
 
 // Start Assessment
+// POST /api/assessment-attempts/:assessmentId/start
+
 router.post(
   "/:assessmentId/start",
   protect,
@@ -31,12 +64,20 @@ router.post(
   startStudentAssessment,
 );
 
+// ======================================
 // Submit Assessment
+// POST /api/assessment-attempts/:attemptId/submit
+// ======================================
+
 router.post(
   "/:attemptId/submit",
   protect,
   authorize("student"),
   submitStudentAssessment,
 );
+
+// ======================================
+// Export
+// ======================================
 
 module.exports = router;

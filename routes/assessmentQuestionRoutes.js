@@ -1,4 +1,5 @@
 const express = require("express");
+
 const router = express.Router();
 
 const {
@@ -10,37 +11,50 @@ const {
   deleteExistingAssessmentQuestion,
 } = require("../controllers/assessmentQuestionController");
 
-const { protect } = require("../middleware/authMiddleware");
+const {
+  protect,
+} = require("../middleware/authMiddleware");
+
 const authorize = require("../middleware/authorize");
 
 // ======================================
-// Test Route
+// Test
 // ======================================
+
 router.get("/test", (req, res) => {
-  res.json({
+  return res.status(200).json({
     success: true,
-    message: "Assessment Question routes are working.",
+    message:
+      "Assessment Question routes are working.",
   });
 });
 
 // ======================================
-// Authenticated Routes
+// Authenticated
 // ======================================
 
-// Get All Questions
-router.get("/", protect, getAssessmentQuestionList);
+router.get(
+  "/",
+  protect,
+  getAssessmentQuestionList,
+);
 
-// Get Questions For Assessment
-router.get("/assessment/:assessmentId", protect, getQuestionsForAssessment);
+router.get(
+  "/assessment/:assessmentId",
+  protect,
+  getQuestionsForAssessment,
+);
 
-// Get Single Question
-router.get("/:id", protect, getAssessmentQuestion);
+router.get(
+  "/:id",
+  protect,
+  getAssessmentQuestion,
+);
 
 // ======================================
-// Tutor/Admin Routes
+// Tutor / Admin
 // ======================================
 
-// Create Question
 router.post(
   "/",
   protect,
@@ -48,7 +62,6 @@ router.post(
   createNewAssessmentQuestion,
 );
 
-// Update Question
 router.put(
   "/:id",
   protect,
@@ -56,7 +69,6 @@ router.put(
   updateExistingAssessmentQuestion,
 );
 
-// Delete Question
 router.delete(
   "/:id",
   protect,

@@ -34,13 +34,7 @@ const liveClassSchema = new mongoose.Schema(
 
     provider: {
       type: String,
-      enum: [
-        "zoom",
-        "google_meet",
-        "microsoft_teams",
-        "jitsi",
-        "custom",
-      ],
+      enum: ["zoom", "google_meet", "microsoft_teams", "jitsi", "custom"],
       default: "custom",
     },
 
@@ -81,33 +75,9 @@ const liveClassSchema = new mongoose.Schema(
       default: "",
     },
 
-    attendance: [
-      {
-        student: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "User",
-        },
-
-        joinedAt: Date,
-
-        leftAt: Date,
-
-        duration: {
-          type: Number,
-          default: 0,
-        },
-      },
-    ],
-
     status: {
       type: String,
-      enum: [
-        "draft",
-        "scheduled",
-        "live",
-        "completed",
-        "cancelled",
-      ],
+      enum: ["draft", "scheduled", "live", "completed", "cancelled"],
       default: "draft",
     },
 

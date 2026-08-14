@@ -1,4 +1,5 @@
 const express = require("express");
+
 const router = express.Router();
 
 const {
@@ -8,43 +9,60 @@ const {
   getCourseAssessment,
   updateExistingAssessment,
   publishAssessmentNow,
+  archiveAssessmentNow,
   removeAssessment,
 } = require("../controllers/assessmentController");
 
-const { protect } = require("../middleware/authMiddleware");
+const {
+  protect,
+} = require("../middleware/authMiddleware");
+
 const authorize = require("../middleware/authorize");
 
 // ======================================
-// Test Route
+// Test
 // ======================================
+
 router.get("/test", (req, res) => {
-  res.json({
+  return res.status(200).json({
     success: true,
     message: "Assessment routes are working.",
   });
 });
 
 // ======================================
-// Authenticated Routes
+// Authenticated
 // ======================================
 
-// Get All Assessments
-router.get("/", protect, getAssessments);
+router.get(
+  "/",
+  protect,
+  getAssessments,
+);
 
-// Get Assessment By Course
-router.get("/course/:courseId", protect, getCourseAssessment);
+router.get(
+  "/course/:courseId",
+  protect,
+  getCourseAssessment,
+);
 
-// Get Assessment By ID
-router.get("/:id", protect, getAssessment);
+router.get(
+  "/:id",
+  protect,
+  getAssessment,
+);
 
 // ======================================
-// Tutor/Admin Routes
+// Tutor / Admin
 // ======================================
 
-// Create Assessment
-router.post("/", protect, authorize("tutor", "admin"), createNewAssessment);
+router.post(
+  "/",
+  protect,
+  authorize("tutor", "admin"),
+  createNewAssessment,
+);
 
-// Update Assessment
 router.put(
   "/:id",
   protect,
@@ -52,7 +70,6 @@ router.put(
   updateExistingAssessment,
 );
 
-// Publish Assessment
 router.patch(
   "/:id/publish",
   protect,
@@ -60,7 +77,18 @@ router.patch(
   publishAssessmentNow,
 );
 
-// Delete Assessment
-router.delete("/:id", protect, authorize("tutor", "admin"), removeAssessment);
+router.patch(
+  "/:id/archive",
+  protect,
+  authorize("tutor", "admin"),
+  archiveAssessmentNow,
+);
+
+router.delete(
+  "/:id",
+  protect,
+  authorize("tutor", "admin"),
+  removeAssessment,
+);
 
 module.exports = router;

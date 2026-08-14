@@ -12,25 +12,69 @@ const {
 } = require("../services/messageService");
 
 // ======================================
+// Helpers
+// ======================================
+
+const getUserId = (req) => {
+  if (!req.user || !req.user._id) {
+    throw new Error("Authenticated user not found.");
+  }
+
+  return req.user._id;
+};
+
+const isValidText = (value) => {
+  return typeof value === "string" && value.trim().length > 0;
+};
+
+const sendControllerError = (res, error, defaultStatus = 400) => {
+  console.error("Message Controller Error:", error);
+
+  return res.status(defaultStatus).json({
+    success: false,
+    message: error.message || "Something went wrong.",
+  });
+};
+
+// ======================================
 // Send Message
 // POST /api/messages/:conversationId
 // ======================================
 const sendNewMessage = async (req, res) => {
   try {
-    const result = await sendMessage(
-      req.params.conversationId,
-      req.user._id,
-      req.body,
-    );
+    const userId = getUserId(req);
+    const { conversationId } = req.params;
+
+    if (!conversationId) {
+      return res.status(400).json({
+        success: false,
+        message: "Conversation ID is required.",
+      });
+    }
+
+    const { type, text, attachments, replyTo, forwardedFrom } = req.body || {};
+
+    if (
+      !isValidText(text) &&
+      (!Array.isArray(attachments) || attachments.length === 0)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Message must contain text or attachment.",
+      });
+    }
+
+    const result = await sendMessage(conversationId, userId, {
+      type,
+      text: typeof text === "string" ? text.trim() : "",
+      attachments: Array.isArray(attachments) ? attachments : [],
+      replyTo: replyTo || null,
+      forwardedFrom: forwardedFrom || null,
+    });
 
     return res.status(201).json(result);
   } catch (error) {
-    console.error("Send Message Error:", error);
-
-    return res.status(400).json({
-      success: false,
-      message: error.message,
-    });
+    return sendControllerError(res, error);
   }
 };
 
@@ -40,19 +84,21 @@ const sendNewMessage = async (req, res) => {
 // ======================================
 const getMessages = async (req, res) => {
   try {
-    const result = await getConversationMessages(
-      req.params.conversationId,
-      req.user._id,
-    );
+    const userId = getUserId(req);
+    const { conversationId } = req.params;
+
+    if (!conversationId) {
+      return res.status(400).json({
+        success: false,
+        message: "Conversation ID is required.",
+      });
+    }
+
+    const result = await getConversationMessages(conversationId, userId);
 
     return res.status(200).json(result);
   } catch (error) {
-    console.error("Get Messages Error:", error);
-
-    return res.status(400).json({
-      success: false,
-      message: error.message,
-    });
+    return sendControllerError(res, error);
   }
 };
 
@@ -62,20 +108,29 @@ const getMessages = async (req, res) => {
 // ======================================
 const updateMessage = async (req, res) => {
   try {
-    const result = await editMessage(
-      req.params.id,
-      req.user._id,
-      req.body.text,
-    );
+    const userId = getUserId(req);
+    const { id } = req.params;
+    const { text } = req.body || {};
+
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        message: "Message ID is required.",
+      });
+    }
+
+    if (!isValidText(text)) {
+      return res.status(400).json({
+        success: false,
+        message: "Message text is required.",
+      });
+    }
+
+    const result = await editMessage(id, userId, text.trim());
 
     return res.status(200).json(result);
   } catch (error) {
-    console.error("Edit Message Error:", error);
-
-    return res.status(400).json({
-      success: false,
-      message: error.message,
-    });
+    return sendControllerError(res, error);
   }
 };
 
@@ -85,16 +140,21 @@ const updateMessage = async (req, res) => {
 // ======================================
 const removeMessageForMe = async (req, res) => {
   try {
-    const result = await deleteMessageForMe(req.params.id, req.user._id);
+    const userId = getUserId(req);
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        message: "Message ID is required.",
+      });
+    }
+
+    const result = await deleteMessageForMe(id, userId);
 
     return res.status(200).json(result);
   } catch (error) {
-    console.error("Delete For Me Error:", error);
-
-    return res.status(400).json({
-      success: false,
-      message: error.message,
-    });
+    return sendControllerError(res, error);
   }
 };
 
@@ -104,16 +164,21 @@ const removeMessageForMe = async (req, res) => {
 // ======================================
 const removeMessageForEveryone = async (req, res) => {
   try {
-    const result = await deleteMessageForEveryone(req.params.id, req.user._id);
+    const userId = getUserId(req);
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        message: "Message ID is required.",
+      });
+    }
+
+    const result = await deleteMessageForEveryone(id, userId);
 
     return res.status(200).json(result);
   } catch (error) {
-    console.error("Delete For Everyone Error:", error);
-
-    return res.status(400).json({
-      success: false,
-      message: error.message,
-    });
+    return sendControllerError(res, error);
   }
 };
 
@@ -123,20 +188,29 @@ const removeMessageForEveryone = async (req, res) => {
 // ======================================
 const reactMessage = async (req, res) => {
   try {
-    const result = await reactToMessage(
-      req.params.id,
-      req.user._id,
-      req.body.emoji,
-    );
+    const userId = getUserId(req);
+    const { id } = req.params;
+    const { emoji } = req.body || {};
+
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        message: "Message ID is required.",
+      });
+    }
+
+    if (!isValidText(emoji)) {
+      return res.status(400).json({
+        success: false,
+        message: "Emoji is required.",
+      });
+    }
+
+    const result = await reactToMessage(id, userId, emoji.trim());
 
     return res.status(200).json(result);
   } catch (error) {
-    console.error("Reaction Error:", error);
-
-    return res.status(400).json({
-      success: false,
-      message: error.message,
-    });
+    return sendControllerError(res, error);
   }
 };
 
@@ -146,54 +220,70 @@ const reactMessage = async (req, res) => {
 // ======================================
 const pinMessage = async (req, res) => {
   try {
-    const result = await togglePinMessage(req.params.id);
+    getUserId(req);
+
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        message: "Message ID is required.",
+      });
+    }
+
+    const result = await togglePinMessage(id);
 
     return res.status(200).json(result);
   } catch (error) {
-    console.error("Pin Message Error:", error);
-
-    return res.status(400).json({
-      success: false,
-      message: error.message,
-    });
+    return sendControllerError(res, error);
   }
 };
 
 // ======================================
-// Mark Delivered
+// Mark Message Delivered
 // PATCH /api/messages/:id/delivered
 // ======================================
 const deliverMessage = async (req, res) => {
   try {
-    const result = await markMessageDelivered(req.params.id, req.user._id);
+    const userId = getUserId(req);
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        message: "Message ID is required.",
+      });
+    }
+
+    const result = await markMessageDelivered(id, userId);
 
     return res.status(200).json(result);
   } catch (error) {
-    console.error("Delivered Error:", error);
-
-    return res.status(400).json({
-      success: false,
-      message: error.message,
-    });
+    return sendControllerError(res, error);
   }
 };
 
 // ======================================
-// Mark Read
+// Mark Message Read
 // PATCH /api/messages/:id/read
 // ======================================
 const readMessage = async (req, res) => {
   try {
-    const result = await markMessageRead(req.params.id, req.user._id);
+    const userId = getUserId(req);
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        message: "Message ID is required.",
+      });
+    }
+
+    const result = await markMessageRead(id, userId);
 
     return res.status(200).json(result);
   } catch (error) {
-    console.error("Read Error:", error);
-
-    return res.status(400).json({
-      success: false,
-      message: error.message,
-    });
+    return sendControllerError(res, error);
   }
 };
 
@@ -203,22 +293,35 @@ const readMessage = async (req, res) => {
 // ======================================
 const forwardExistingMessage = async (req, res) => {
   try {
-    const result = await forwardMessage(
-      req.params.id,
-      req.params.conversationId,
-      req.user._id,
-    );
+    const userId = getUserId(req);
+
+    const { id, conversationId } = req.params;
+
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        message: "Message ID is required.",
+      });
+    }
+
+    if (!conversationId) {
+      return res.status(400).json({
+        success: false,
+        message: "Destination conversation ID is required.",
+      });
+    }
+
+    const result = await forwardMessage(id, conversationId, userId);
 
     return res.status(201).json(result);
   } catch (error) {
-    console.error("Forward Error:", error);
-
-    return res.status(400).json({
-      success: false,
-      message: error.message,
-    });
+    return sendControllerError(res, error);
   }
 };
+
+// ======================================
+// Exports
+// ======================================
 
 module.exports = {
   sendNewMessage,

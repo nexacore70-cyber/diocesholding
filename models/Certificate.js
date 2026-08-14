@@ -7,6 +7,7 @@ const certificateSchema = new mongoose.Schema(
       ref: "User",
       required: true,
       index: true,
+      immutable: true,
     },
 
     course: {
@@ -14,6 +15,7 @@ const certificateSchema = new mongoose.Schema(
       ref: "Course",
       required: true,
       index: true,
+      immutable: true,
     },
 
     enrollment: {
@@ -21,6 +23,7 @@ const certificateSchema = new mongoose.Schema(
       ref: "Enrollment",
       required: true,
       unique: true,
+      immutable: true,
     },
 
     certificateNumber: {
@@ -28,6 +31,8 @@ const certificateSchema = new mongoose.Schema(
       required: true,
       unique: true,
       trim: true,
+      uppercase: true,
+      immutable: true,
       index: true,
     },
 
@@ -36,6 +41,8 @@ const certificateSchema = new mongoose.Schema(
       required: true,
       unique: true,
       trim: true,
+      lowercase: true,
+      immutable: true,
       index: true,
     },
 
@@ -43,22 +50,26 @@ const certificateSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
+      immutable: true,
     },
 
     issuedAt: {
       type: Date,
       default: Date.now,
+      immutable: true,
     },
 
     pdfUrl: {
       type: String,
       default: "",
+      trim: true,
     },
 
     status: {
       type: String,
       enum: ["issued", "revoked"],
       default: "issued",
+      index: true,
     },
 
     isDeleted: {
@@ -72,15 +83,70 @@ const certificateSchema = new mongoose.Schema(
       default: null,
     },
 
+    revokedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+
     revokedReason: {
       type: String,
       default: "",
       trim: true,
+      maxlength: 500,
     },
   },
   {
     timestamps: true,
   },
 );
+
+/*
+ * Frequently used queries.
+ */
+certificateSchema.index({
+  student: 1,
+  status: 1,
+  isDeleted: 1,
+});
+
+certificateSchema.index({
+  course: 1,
+  status: 1,
+  isDeleted: 1,
+});
+
+certificateSchema.index({
+  verificationCode: 1,
+  status: 1,
+  isDeleted: 1,
+});
+
+/*
+ * Validate revoked state.
+ */
+certificateSchema.pre("validate", function (next) {
+  if (this.status === "revoked") {
+    if (!this.revokedAt) {
+      return next(
+        new Error("Revoked certificates must have a revokedAt date."),
+      );
+    }
+
+    if (!this.revokedBy) {
+      return next(
+        new Error("Revoked certificates must have a revokedBy user."),
+      );
+    }
+  }
+
+  if (this.status === "issued") {
+    this.revokedAt = null;
+    this.revokedBy = null;
+    this.revokedReason = "";
+  }
+
+  next();
+});
 
 module.exports = mongoose.model("Certificate", certificateSchema);

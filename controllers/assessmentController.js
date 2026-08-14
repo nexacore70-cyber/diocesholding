@@ -5,146 +5,208 @@ const {
   getAssessmentByCourse,
   updateAssessment,
   publishAssessment,
+  archiveAssessment,
   deleteAssessment,
 } = require("../services/assessmentService");
 
+const handleError = (res, error, fallback) => {
+  console.error(fallback, error);
+
+  const message = error.message || fallback;
+
+  if (
+    message.toLowerCase().includes("not found")
+  ) {
+    return res.status(404).json({
+      success: false,
+      message,
+    });
+  }
+
+  if (
+    message.toLowerCase().includes("not allowed") ||
+    message.toLowerCase().includes("cannot") ||
+    message.toLowerCase().includes("already")
+  ) {
+    return res.status(409).json({
+      success: false,
+      message,
+    });
+  }
+
+  return res.status(400).json({
+    success: false,
+    message,
+  });
+};
+
 // ======================================
-// Create Assessment
-// @route POST /api/assessments
-// @access Tutor/Admin
+// Create
 // ======================================
+
 const createNewAssessment = async (req, res) => {
   try {
-    const result = await createAssessment(req.body, req.user._id);
+    const result = await createAssessment(
+      req.body,
+      req.user._id,
+    );
 
     return res.status(201).json(result);
   } catch (error) {
-    console.error("Create Assessment Error:", error);
-
-    return res.status(400).json({
-      success: false,
-      message: error.message,
-    });
+    return handleError(
+      res,
+      error,
+      "Unable to create assessment.",
+    );
   }
 };
 
 // ======================================
-// Get All Assessments
-// @route GET /api/assessments
-// @access Public
+// Get All
 // ======================================
+
 const getAssessments = async (req, res) => {
   try {
     const result = await getAllAssessments();
 
     return res.status(200).json(result);
   } catch (error) {
-    console.error("Get Assessments Error:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    return handleError(
+      res,
+      error,
+      "Unable to fetch assessments.",
+    );
   }
 };
 
 // ======================================
-// Get Assessment By ID
-// @route GET /api/assessments/:id
-// @access Authenticated
+// Get By ID
 // ======================================
+
 const getAssessment = async (req, res) => {
   try {
-    const result = await getAssessmentById(req.params.id);
+    const result = await getAssessmentById(
+      req.params.id,
+    );
 
     return res.status(200).json(result);
   } catch (error) {
-    console.error("Get Assessment Error:", error);
-
-    return res.status(404).json({
-      success: false,
-      message: error.message,
-    });
+    return handleError(
+      res,
+      error,
+      "Unable to fetch assessment.",
+    );
   }
 };
 
 // ======================================
-// Get Assessment By Course
-// @route GET /api/assessments/course/:courseId
-// @access Authenticated
+// Get By Course
 // ======================================
+
 const getCourseAssessment = async (req, res) => {
   try {
-    const result = await getAssessmentByCourse(req.params.courseId);
+    const result = await getAssessmentByCourse(
+      req.params.courseId,
+    );
 
     return res.status(200).json(result);
   } catch (error) {
-    console.error("Get Course Assessment Error:", error);
-
-    return res.status(404).json({
-      success: false,
-      message: error.message,
-    });
+    return handleError(
+      res,
+      error,
+      "Unable to fetch course assessment.",
+    );
   }
 };
 
 // ======================================
-// Update Assessment
-// @route PUT /api/assessments/:id
-// @access Tutor/Admin
+// Update
 // ======================================
-const updateExistingAssessment = async (req, res) => {
+
+const updateExistingAssessment = async (
+  req,
+  res,
+) => {
   try {
-    const result = await updateAssessment(req.params.id, req.body);
+    const result = await updateAssessment(
+      req.params.id,
+      req.body,
+      req.user._id,
+    );
 
     return res.status(200).json(result);
   } catch (error) {
-    console.error("Update Assessment Error:", error);
-
-    return res.status(400).json({
-      success: false,
-      message: error.message,
-    });
+    return handleError(
+      res,
+      error,
+      "Unable to update assessment.",
+    );
   }
 };
 
 // ======================================
-// Publish Assessment
-// @route PATCH /api/assessments/:id/publish
-// @access Tutor/Admin
+// Publish
 // ======================================
+
 const publishAssessmentNow = async (req, res) => {
   try {
-    const result = await publishAssessment(req.params.id);
+    const result = await publishAssessment(
+      req.params.id,
+      req.user._id,
+    );
 
     return res.status(200).json(result);
   } catch (error) {
-    console.error("Publish Assessment Error:", error);
-
-    return res.status(400).json({
-      success: false,
-      message: error.message,
-    });
+    return handleError(
+      res,
+      error,
+      "Unable to publish assessment.",
+    );
   }
 };
 
 // ======================================
-// Delete Assessment
-// @route DELETE /api/assessments/:id
-// @access Tutor/Admin
+// Archive
 // ======================================
-const removeAssessment = async (req, res) => {
+
+const archiveAssessmentNow = async (
+  req,
+  res,
+) => {
   try {
-    const result = await deleteAssessment(req.params.id);
+    const result = await archiveAssessment(
+      req.params.id,
+      req.user._id,
+    );
 
     return res.status(200).json(result);
   } catch (error) {
-    console.error("Delete Assessment Error:", error);
+    return handleError(
+      res,
+      error,
+      "Unable to archive assessment.",
+    );
+  }
+};
 
-    return res.status(400).json({
-      success: false,
-      message: error.message,
-    });
+// ======================================
+// Delete
+// ======================================
+
+const removeAssessment = async (req, res) => {
+  try {
+    const result = await deleteAssessment(
+      req.params.id,
+      req.user._id,
+    );
+
+    return res.status(200).json(result);
+  } catch (error) {
+    return handleError(
+      res,
+      error,
+      "Unable to delete assessment.",
+    );
   }
 };
 
@@ -155,5 +217,6 @@ module.exports = {
   getCourseAssessment,
   updateExistingAssessment,
   publishAssessmentNow,
+  archiveAssessmentNow,
   removeAssessment,
 };

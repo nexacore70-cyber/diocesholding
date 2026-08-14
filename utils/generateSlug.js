@@ -1,11 +1,43 @@
+// ======================================
+// Generate URL Slug
+// ======================================
+
 const generateSlug = (text = "") => {
-  return text
-    .toString()
+  // ======================================
+  // Validate Input
+  // ======================================
+
+  if (text === null || text === undefined) {
+    return "";
+  }
+
+  if (typeof text !== "string") {
+    text = String(text);
+  }
+
+  // ======================================
+  // Normalize Text
+  // ======================================
+
+  const slug = text
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .trim()
-    .replace(/[^\w\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-");
+    .replace(/['’]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .replace(/-{2,}/g, "-");
+
+  // ======================================
+  // Safety Limit
+  // ======================================
+
+  return slug.slice(0, 220).replace(/-+$/g, "");
 };
+
+// ======================================
+// Export
+// ======================================
 
 module.exports = generateSlug;

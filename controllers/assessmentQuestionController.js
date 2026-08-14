@@ -7,123 +7,180 @@ const {
   deleteAssessmentQuestion,
 } = require("../services/assessmentQuestionService");
 
+const handleError = (res, error, fallback) => {
+  console.error(fallback, error);
+
+  const message = error.message || fallback;
+
+  if (
+    message.toLowerCase().includes("not found")
+  ) {
+    return res.status(404).json({
+      success: false,
+      message,
+    });
+  }
+
+  if (
+    message.toLowerCase().includes("not allowed") ||
+    message.toLowerCase().includes("cannot")
+  ) {
+    return res.status(409).json({
+      success: false,
+      message,
+    });
+  }
+
+  return res.status(400).json({
+    success: false,
+    message,
+  });
+};
+
 // ======================================
-// Create Assessment Question
-// @route POST /api/assessment-questions
-// @access Tutor/Admin
+// Create
 // ======================================
-const createNewAssessmentQuestion = async (req, res) => {
+
+const createNewAssessmentQuestion = async (
+  req,
+  res,
+) => {
   try {
-    const result = await createAssessmentQuestion(req.body, req.user._id);
+    const result =
+      await createAssessmentQuestion(
+        req.body,
+        req.user._id,
+      );
 
     return res.status(201).json(result);
   } catch (error) {
-    console.error("Create Assessment Question Error:", error);
-
-    return res.status(400).json({
-      success: false,
-      message: error.message,
-    });
+    return handleError(
+      res,
+      error,
+      "Unable to create assessment question.",
+    );
   }
 };
 
 // ======================================
-// Get All Assessment Questions
-// @route GET /api/assessment-questions
-// @access Authenticated
+// Get All
 // ======================================
-const getAssessmentQuestionList = async (req, res) => {
+
+const getAssessmentQuestionList = async (
+  req,
+  res,
+) => {
   try {
-    const result = await getAllAssessmentQuestions();
+    const result =
+      await getAllAssessmentQuestions();
 
     return res.status(200).json(result);
   } catch (error) {
-    console.error("Get Assessment Questions Error:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    return handleError(
+      res,
+      error,
+      "Unable to fetch assessment questions.",
+    );
   }
 };
 
 // ======================================
-// Get Questions By Assessment
-// @route GET /api/assessment-questions/assessment/:assessmentId
-// @access Authenticated
+// Get For Assessment
 // ======================================
-const getQuestionsForAssessment = async (req, res) => {
+
+const getQuestionsForAssessment = async (
+  req,
+  res,
+) => {
   try {
-    const result = await getAssessmentQuestions(req.params.assessmentId);
+    const result =
+      await getAssessmentQuestions(
+        req.params.assessmentId,
+        false,
+      );
 
     return res.status(200).json(result);
   } catch (error) {
-    console.error("Get Assessment Questions Error:", error);
-
-    return res.status(404).json({
-      success: false,
-      message: error.message,
-    });
+    return handleError(
+      res,
+      error,
+      "Unable to fetch assessment questions.",
+    );
   }
 };
 
 // ======================================
-// Get Single Question
-// @route GET /api/assessment-questions/:id
-// @access Authenticated
+// Get Single
 // ======================================
-const getAssessmentQuestion = async (req, res) => {
+
+const getAssessmentQuestion = async (
+  req,
+  res,
+) => {
   try {
-    const result = await getAssessmentQuestionById(req.params.id);
+    const result =
+      await getAssessmentQuestionById(
+        req.params.id,
+      );
 
     return res.status(200).json(result);
   } catch (error) {
-    console.error("Get Assessment Question Error:", error);
-
-    return res.status(404).json({
-      success: false,
-      message: error.message,
-    });
+    return handleError(
+      res,
+      error,
+      "Unable to fetch assessment question.",
+    );
   }
 };
 
 // ======================================
-// Update Question
-// @route PUT /api/assessment-questions/:id
-// @access Tutor/Admin
+// Update
 // ======================================
-const updateExistingAssessmentQuestion = async (req, res) => {
+
+const updateExistingAssessmentQuestion = async (
+  req,
+  res,
+) => {
   try {
-    const result = await updateAssessmentQuestion(req.params.id, req.body);
+    const result =
+      await updateAssessmentQuestion(
+        req.params.id,
+        req.body,
+        req.user._id,
+      );
 
     return res.status(200).json(result);
   } catch (error) {
-    console.error("Update Assessment Question Error:", error);
-
-    return res.status(400).json({
-      success: false,
-      message: error.message,
-    });
+    return handleError(
+      res,
+      error,
+      "Unable to update assessment question.",
+    );
   }
 };
 
 // ======================================
-// Delete Question
-// @route DELETE /api/assessment-questions/:id
-// @access Tutor/Admin
+// Delete
 // ======================================
-const deleteExistingAssessmentQuestion = async (req, res) => {
+
+const deleteExistingAssessmentQuestion = async (
+  req,
+  res,
+) => {
   try {
-    const result = await deleteAssessmentQuestion(req.params.id);
+    const result =
+      await deleteAssessmentQuestion(
+        req.params.id,
+        req.user._id,
+      );
 
     return res.status(200).json(result);
   } catch (error) {
-    console.error("Delete Assessment Question Error:", error);
-
-    return res.status(400).json({
-      success: false,
-      message: error.message,
-    });
+    return handleError(
+      res,
+      error,
+      "Unable to delete assessment question.",
+    );
   }
 };
 

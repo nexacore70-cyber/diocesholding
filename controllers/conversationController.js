@@ -11,7 +11,14 @@ const {
 // ======================================
 const createNewConversation = async (req, res) => {
   try {
-    const result = await createConversation(req.body, req.user._id);
+    if (!req.user?._id) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required.",
+      });
+    }
+
+    const result = await createConversation(req.body || {}, req.user._id);
 
     return res.status(201).json(result);
   } catch (error) {
@@ -19,7 +26,7 @@ const createNewConversation = async (req, res) => {
 
     return res.status(400).json({
       success: false,
-      message: error.message,
+      message: error.message || "Unable to create conversation.",
     });
   }
 };
@@ -30,6 +37,13 @@ const createNewConversation = async (req, res) => {
 // ======================================
 const getConversations = async (req, res) => {
   try {
+    if (!req.user?._id) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required.",
+      });
+    }
+
     const result = await getMyConversations(req.user._id);
 
     return res.status(200).json(result);
@@ -38,7 +52,7 @@ const getConversations = async (req, res) => {
 
     return res.status(500).json({
       success: false,
-      message: error.message,
+      message: error.message || "Unable to retrieve conversations.",
     });
   }
 };
@@ -49,15 +63,31 @@ const getConversations = async (req, res) => {
 // ======================================
 const getConversation = async (req, res) => {
   try {
+    if (!req.user?._id) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required.",
+      });
+    }
+
+    if (!req.params.id) {
+      return res.status(400).json({
+        success: false,
+        message: "Conversation ID is required.",
+      });
+    }
+
     const result = await getConversationById(req.params.id, req.user._id);
 
     return res.status(200).json(result);
   } catch (error) {
     console.error("Get Conversation Error:", error);
 
-    return res.status(404).json({
+    const statusCode = error.message === "Conversation not found." ? 404 : 400;
+
+    return res.status(statusCode).json({
       success: false,
-      message: error.message,
+      message: error.message || "Unable to retrieve conversation.",
     });
   }
 };
@@ -68,15 +98,36 @@ const getConversation = async (req, res) => {
 // ======================================
 const removeConversation = async (req, res) => {
   try {
+    if (!req.user?._id) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required.",
+      });
+    }
+
+    if (!req.params.id) {
+      return res.status(400).json({
+        success: false,
+        message: "Conversation ID is required.",
+      });
+    }
+
     const result = await deleteConversation(req.params.id, req.user._id);
 
     return res.status(200).json(result);
   } catch (error) {
     console.error("Delete Conversation Error:", error);
 
-    return res.status(400).json({
+    const statusCode =
+      error.message === "Conversation not found."
+        ? 404
+        : error.message.includes("owner")
+          ? 403
+          : 400;
+
+    return res.status(statusCode).json({
       success: false,
-      message: error.message,
+      message: error.message || "Unable to delete conversation.",
     });
   }
 };

@@ -1,109 +1,276 @@
+const mongoose = require("mongoose");
+
 const {
   createEnrollment,
   getAllEnrollments,
+  getTutorEnrollments,
+  getMyEnrollments,
   getEnrollmentById,
   updateEnrollment,
   deleteEnrollment,
 } = require("../services/enrollmentService");
 
-// @desc Create Enrollment
-// @route POST /api/enrollments
-// @access Student/Admin
-const createNewEnrollment = async (req, res) => {
-  try {
-    const enrollmentData = {
-      ...req.body,
-      student: req.user._id,
-    };
+// ======================================
+// Helpers
+// ======================================
 
-    const result = await createEnrollment(enrollmentData);
+const isValidObjectId = (id) => {
+  return mongoose.Types.ObjectId.isValid(id);
+};
 
-    return res.status(201).json(result);
-  } catch (error) {
-    console.error("Create Enrollment Error:", error);
+const handleControllerError = (res, error, fallbackMessage) => {
+  console.error(error);
 
-    return res.status(500).json({
+  if (error.statusCode && error.statusCode >= 400 && error.statusCode < 500) {
+    return res.status(error.statusCode).json({
       success: false,
       message: error.message,
     });
   }
+
+  if (error.name === "ValidationError") {
+    return res.status(400).json({
+      success: false,
+      message:
+        Object.values(error.errors)[0]?.message || "Invalid enrollment data.",
+    });
+  }
+
+  if (error.name === "CastError") {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid enrollment data.",
+    });
+  }
+
+  return res.status(500).json({
+    success: false,
+    message: fallbackMessage,
+  });
 };
 
-// @desc Get All Enrollments
-// @route GET /api/enrollments
-// @access Admin
+// ======================================
+// Create Enrollment
+// ======================================
+// POST /api/enrollments
+// ======================================
+
+const createNewEnrollment = async (req, res) => {
+  try {
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required.",
+      });
+    }
+
+    const { course } = req.body;
+
+    if (!course) {
+      return res.status(400).json({
+        success: false,
+        message: "Course is required.",
+      });
+    }
+
+    if (!isValidObjectId(course)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid course identifier.",
+      });
+    }
+
+    // ======================================
+    // NEVER accept student from req.body
+    // ======================================
+
+    const result = await createEnrollment({
+      student: req.user._id,
+      course,
+    });
+
+    return res.status(201).json(result);
+  } catch (error) {
+    return handleControllerError(res, error, "Unable to create enrollment.");
+  }
+};
+
+// ======================================
+// Get My Enrollments
+// ======================================
+// GET /api/enrollments/me
+// ======================================
+
+const getMyEnrollmentsController = async (req, res) => {
+  try {
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required.",
+      });
+    }
+
+    const result = await getMyEnrollments(req.user._id);
+
+    return res.status(200).json(result);
+  } catch (error) {
+    return handleControllerError(
+      res,
+      error,
+      "Unable to fetch your enrollments.",
+    );
+  }
+};
+
+// ======================================
+// Get All Enrollments
+// ======================================
+// GET /api/enrollments
+// ======================================
+
 const getEnrollments = async (req, res) => {
   try {
     const result = await getAllEnrollments();
 
     return res.status(200).json(result);
   } catch (error) {
-    console.error("Get Enrollments Error:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    return handleControllerError(res, error, "Unable to fetch enrollments.");
   }
 };
 
-// @desc Get Single Enrollment
-// @route GET /api/enrollments/:id
-// @access Admin
+// ======================================
+// Get Tutor Enrollments
+// ======================================
+// GET /api/enrollments/tutor
+// ======================================
+
+const getTutorEnrollmentList = async (req, res) => {
+  try {
+    const result = await getTutorEnrollments(req.user._id);
+
+    return res.status(200).json(result);
+  } catch (error) {
+    return handleControllerError(
+      res,
+      error,
+      "Unable to fetch tutor enrollments.",
+    );
+  }
+};
+
+// ======================================
+// Get Single Enrollment
+// ======================================
+// GET /api/enrollments/:id
+// ======================================
+
 const getEnrollment = async (req, res) => {
   try {
-    const result = await getEnrollmentById(req.params.id);
+    const { id } = req.params;
+
+    if (!isValidObjectId(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid enrollment identifier.",
+      });
+    }
+
+    const result = await getEnrollmentById(id);
 
     return res.status(200).json(result);
   } catch (error) {
-    console.error("Get Enrollment Error:", error);
-
-    return res.status(404).json({
-      success: false,
-      message: error.message,
-    });
+    return handleControllerError(res, error, "Unable to fetch enrollment.");
   }
 };
 
-// @desc Update Enrollment
-// @route PUT /api/enrollments/:id
-// @access Admin
+// ======================================
+// Update Enrollment
+// ======================================
+// PUT /api/enrollments/:id
+// ======================================
+
 const updateExistingEnrollment = async (req, res) => {
   try {
-    const result = await updateEnrollment(req.params.id, req.body);
+    const { id } = req.params;
+
+    if (!isValidObjectId(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid enrollment identifier.",
+      });
+    }
+
+    if (!req.body || typeof req.body !== "object" || Array.isArray(req.body)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid enrollment data.",
+      });
+    }
+
+    const allowedFields = [
+      "status",
+      "progress",
+      "completedAt",
+      "certificateIssued",
+    ];
+
+    const updateData = {};
+
+    for (const field of allowedFields) {
+      if (Object.prototype.hasOwnProperty.call(req.body, field)) {
+        updateData[field] = req.body[field];
+      }
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No valid enrollment fields were provided.",
+      });
+    }
+
+    const result = await updateEnrollment(id, updateData, req.user);
 
     return res.status(200).json(result);
   } catch (error) {
-    console.error("Update Enrollment Error:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    return handleControllerError(res, error, "Unable to update enrollment.");
   }
 };
 
-// @desc Delete Enrollment
-// @route DELETE /api/enrollments/:id
-// @access Admin
+// ======================================
+// Delete Enrollment
+// ======================================
+// DELETE /api/enrollments/:id
+// ======================================
+
 const deleteExistingEnrollment = async (req, res) => {
   try {
-    const result = await deleteEnrollment(req.params.id);
+    const { id } = req.params;
+
+    if (!isValidObjectId(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid enrollment identifier.",
+      });
+    }
+
+    const result = await deleteEnrollment(id, req.user);
 
     return res.status(200).json(result);
   } catch (error) {
-    console.error("Delete Enrollment Error:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    return handleControllerError(res, error, "Unable to delete enrollment.");
   }
 };
+
+// ======================================
+// Export
+// ======================================
 
 module.exports = {
   createNewEnrollment,
+  getMyEnrollmentsController,
   getEnrollments,
+  getTutorEnrollmentList,
   getEnrollment,
   updateExistingEnrollment,
   deleteExistingEnrollment,

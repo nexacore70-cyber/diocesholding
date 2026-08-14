@@ -6,18 +6,21 @@ const enrollmentSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
+      index: true,
     },
 
     course: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Course",
       required: true,
+      index: true,
     },
 
     status: {
       type: String,
       enum: ["active", "completed", "cancelled", "suspended"],
       default: "active",
+      index: true,
     },
 
     progress: {
@@ -47,7 +50,34 @@ const enrollmentSchema = new mongoose.Schema(
   },
 );
 
-// Prevent duplicate enrollment
-enrollmentSchema.index({ student: 1, course: 1 }, { unique: true });
+// ======================================
+// Prevent Duplicate Enrollment
+// ======================================
+
+enrollmentSchema.index(
+  {
+    student: 1,
+    course: 1,
+  },
+  {
+    unique: true,
+  },
+);
+
+// ======================================
+// Useful Query Index
+// ======================================
+
+enrollmentSchema.index({
+  student: 1,
+  status: 1,
+  createdAt: -1,
+});
+
+enrollmentSchema.index({
+  course: 1,
+  status: 1,
+  createdAt: -1,
+});
 
 module.exports = mongoose.model("Enrollment", enrollmentSchema);

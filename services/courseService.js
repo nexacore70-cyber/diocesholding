@@ -1,186 +1,6 @@
-const Course = require("../models/Course");
-const generateSlug = require("../utils/generateSlug");
+const mongoose = require("mongoose");
 
-// ======================================
-// Create Course
-// ======================================
-const createCourse = async (courseData, tutorId) => {
-  if (!courseData.title) {
-    throw new Error("Course title is required.");
-  }
-
-  let slug = generateSlug(courseData.title);
-
-  let existingCourse = await Course.findOne({ slug });
-
-  let counter = 1;
-
-  while (existingCourse) {
-    slug = `${generateSlug(courseData.title)}-${counter}`;
-    existingCourse = await Course.findOne({ slug });
-    counter++;
-  }
-
-  const course = await Course.create({
-    ...courseData,
-
-    thumbnail: {
-      url: courseData.thumbnail?.url || "",
-      filename: courseData.thumbnail?.filename || "",
-      originalName: courseData.thumbnail?.originalName || "",
-    },
-
-    slug,
-    tutor: tutorId,
-  });
-
-  return {
-    success: true,
-    message: "Course created successfully.",
-    data: course,
-  };
-};
-
-// ======================================
-// Get All Courses
-// ======================================
-const getAllCourses = async () => {
-  return Course.find({ isDeleted: false })
-    .populate("tutor", "firstName lastName email")
-    .populate("category", "name slug")
-    .sort({ createdAt: -1 });
-};
-
-// ======================================
-// Get Course By ID
-// ======================================
-const getCourseById = async (courseId) => {
-  const course = await Course.findOne({
-    _id: courseId,
-    isDeleted: false,
-  })
-    .populate("tutor", "firstName lastName email")
-    .populate("category", "name slug");
-
-  if (!course) {
-    throw new Error("Course not found.");
-  }
-
-  return course;
-};
-
-// ======================================
-// Get Course By Slug
-// ======================================
-const getCourseBySlug = async (slug) => {
-  const course = await Course.findOne({
-    slug,
-    isDeleted: false,
-  })
-    .populate("tutor", "firstName lastName email")
-    .populate("category", "name slug");
-
-  if (!course) {
-    throw new Error("Course not found.");
-  }
-
-  return course;
-};
-
-// ======================================
-// Update Course
-// ======================================
-const updateCourse = async (courseId, updateData) => {
-  const course = await Course.findOne({
-    _id: courseId,
-    isDeleted: false,
-  });
-
-  if (!course) {
-    throw new Error("Course not found.");
-  }
-
-  if (updateData.title && updateData.title !== course.title) {
-    let slug = generateSlug(updateData.title);
-
-    let existingCourse = await Course.findOne({
-      slug,
-      _id: { $ne: courseId },
-    });
-
-    let counter = 1;
-
-    while (existingCourse) {
-      slug = `${generateSlug(updateData.title)}-${counter}`;
-      existingCourse = await Course.findOne({
-        slug,
-        _id: { $ne: courseId },
-      });
-      counter++;
-    }
-
-    course.slug = slug;
-  }
-
-  if (updateData.thumbnail) {
-    course.thumbnail = {
-      url: updateData.thumbnail.url || "",
-      filename: updateData.thumbnail.filename || "",
-      originalName: updateData.thumbnail.originalName || "",
-    };
-  }
-
-  Object.assign(course, {
-    ...updateData,
-    thumbnail: course.thumbnail,
-  });
-
-  await course.save();
-
-  return course;
-};
-
-// ======================================
-// Delete Course (Soft Delete)
-// ======================================
-const deleteCourse = async (courseId) => {
-  const course = await Course.findOne({
-    _id: courseId,
-    isDeleted: false,
-  });
-
-  if (!course) {
-    throw new Error("Course not found.");
-  }
-
-  course.isDeleted = true;
-
-  await course.save();
-
-  return course;
-};
-
-// ======================================
-// Restore Course
-// ======================================
-const restoreCourse = async (courseId) => {
-  const course = await Course.findOne({
-    _id: courseId,
-    isDeleted: true,
-  });
-
-  if (!course) {
-    throw new Error("Course not found.");
-  }
-
-  course.isDeleted = false;
-
-  await course.save();
-
-  return course;
-};
-
-module.exports = {
+const {
   createCourse,
   getAllCourses,
   getCourseById,
@@ -188,4 +8,268 @@ module.exports = {
   updateCourse,
   deleteCourse,
   restoreCourse,
+} = require("../services/courseService");
+
+// ======================================
+// Helpers
+// ======================================
+
+const isValidObjectId = (id) => {
+  return mongoose.Types.ObjectId.isValid(id);
+};
+
+const handleControllerError = (res, error, fallbackMessage) => {
+  console.error("Course Controller Error:", error);
+
+  if (error.name === "ValidationError") {
+    const message =
+      Object.values(error.errors)[0]?.message || "Invalid request data.";
+
+    return res.status(400).json({
+      success: false,
+      message,
+    });
+  }
+
+  if (error.name === "CastError") {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid identifier.",
+    });
+  }
+
+  if (error.code === 11000) {
+    return res.status(409).json({
+      success: false,
+      message: "A course with this information already exists.",
+    });
+  }
+
+  if (error.statusCode && error.statusCode >= 400 && error.statusCode < 500) {
+    return res.status(error.statusCode).json({
+      success: false,
+      message: error.message,
+    });
+  }
+
+  return res.status(500).json({
+    success: false,
+    message: fallbackMessage,
+  });
+};
+
+// ======================================
+// Create Course
+// ======================================
+
+const createNewCourse = async (req, res) => {
+  try {
+    if (!req.user?._id) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required.",
+      });
+    }
+
+    const result = await createCourse(req.body, req.user._id);
+
+    return res.status(201).json(result);
+  } catch (error) {
+    return handleControllerError(res, error, "Unable to create course.");
+  }
+};
+
+// ======================================
+// Get Courses
+// ======================================
+
+const getCourses = async (req, res) => {
+  try {
+    const courses = await getAllCourses();
+
+    return res.status(200).json({
+      success: true,
+      message: "Courses retrieved successfully.",
+      data: courses,
+    });
+  } catch (error) {
+    return handleControllerError(res, error, "Unable to fetch courses.");
+  }
+};
+
+// ======================================
+// Get Course By ID
+// ======================================
+
+const getSingleCourse = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!isValidObjectId(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid course identifier.",
+      });
+    }
+
+    const course = await getCourseById(id);
+
+    return res.status(200).json({
+      success: true,
+      message: "Course retrieved successfully.",
+      data: course,
+    });
+  } catch (error) {
+    return handleControllerError(res, error, "Unable to fetch course.");
+  }
+};
+
+// ======================================
+// Get Course By Slug
+// ======================================
+
+const getSingleCourseBySlug = async (req, res) => {
+  try {
+    const slug = String(req.params.slug || "").trim();
+
+    if (!slug) {
+      return res.status(400).json({
+        success: false,
+        message: "Course slug is required.",
+      });
+    }
+
+    const course = await getCourseBySlug(slug);
+
+    return res.status(200).json({
+      success: true,
+      message: "Course retrieved successfully.",
+      data: course,
+    });
+  } catch (error) {
+    return handleControllerError(res, error, "Unable to fetch course.");
+  }
+};
+
+// ======================================
+// Update Course
+// ======================================
+
+const updateExistingCourse = async (req, res) => {
+  try {
+    if (!req.user?._id) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required.",
+      });
+    }
+
+    const { id } = req.params;
+
+    if (!isValidObjectId(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid course identifier.",
+      });
+    }
+
+    if (!req.body || typeof req.body !== "object" || Array.isArray(req.body)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid course data.",
+      });
+    }
+
+    const course = await updateCourse(id, req.body, req.user);
+
+    return res.status(200).json({
+      success: true,
+      message: "Course updated successfully.",
+      data: course,
+    });
+  } catch (error) {
+    return handleControllerError(res, error, "Unable to update course.");
+  }
+};
+
+// ======================================
+// Delete Course
+// ======================================
+
+const removeCourse = async (req, res) => {
+  try {
+    if (!req.user?._id) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required.",
+      });
+    }
+
+    const { id } = req.params;
+
+    if (!isValidObjectId(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid course identifier.",
+      });
+    }
+
+    const course = await deleteCourse(id, req.user);
+
+    return res.status(200).json({
+      success: true,
+      message: "Course deleted successfully.",
+      data: course,
+    });
+  } catch (error) {
+    return handleControllerError(res, error, "Unable to delete course.");
+  }
+};
+
+// ======================================
+// Restore Course
+// ======================================
+
+const restoreDeletedCourse = async (req, res) => {
+  try {
+    if (!req.user?._id) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required.",
+      });
+    }
+
+    const { id } = req.params;
+
+    if (!isValidObjectId(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid course identifier.",
+      });
+    }
+
+    const course = await restoreCourse(id, req.user);
+
+    return res.status(200).json({
+      success: true,
+      message: "Course restored successfully.",
+      data: course,
+    });
+  } catch (error) {
+    return handleControllerError(res, error, "Unable to restore course.");
+  }
+};
+
+// ======================================
+// Export
+// ======================================
+
+module.exports = {
+  createNewCourse,
+  getCourses,
+  getSingleCourse,
+  getSingleCourseBySlug,
+  updateExistingCourse,
+  removeCourse,
+  restoreDeletedCourse,
 };

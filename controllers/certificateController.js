@@ -9,147 +9,216 @@ const {
 } = require("../services/certificateService");
 
 // ======================================
-// Issue Certificate
-// POST /api/certificates/issue/:enrollmentId
-// Admin
+// Error Handler
 // ======================================
-const issueStudentCertificate = async (req, res) => {
+
+const handleError = (res, error, fallback) => {
+  console.error(fallback, error);
+
+  const message = error?.message || fallback;
+
+  const normalized = message.toLowerCase();
+
+  if (
+    normalized.includes("not found") ||
+    normalized.includes("does not exist") ||
+    normalized.includes("invalid")
+  ) {
+    return res.status(404).json({
+      success: false,
+      message,
+    });
+  }
+
+  if (
+    normalized.includes("already") ||
+    normalized.includes("cannot") ||
+    normalized.includes("only administrators") ||
+    normalized.includes("not authorized")
+  ) {
+    return res.status(409).json({
+      success: false,
+      message,
+    });
+  }
+
+  return res.status(400).json({
+    success: false,
+    message,
+  });
+};
+
+// ======================================
+// Issue Certificate
+// ======================================
+
+const issueStudentCertificate = async (
+  req,
+  res,
+) => {
   try {
-    const result = await issueCertificate(
-      req.params.enrollmentId,
-      req.user._id,
-    );
+    const result =
+      await issueCertificate(
+        req.params.enrollmentId,
+        req.user._id,
+      );
 
     return res.status(201).json(result);
   } catch (error) {
-    console.error("Issue Certificate Error:", error);
-
-    return res.status(400).json({
-      success: false,
-      message: error.message,
-    });
+    return handleError(
+      res,
+      error,
+      "Unable to issue certificate.",
+    );
   }
 };
 
 // ======================================
 // Get My Certificates
-// GET /api/certificates/my-certificates
-// Student
 // ======================================
-const getStudentCertificates = async (req, res) => {
+
+const getStudentCertificates = async (
+  req,
+  res,
+) => {
   try {
-    const result = await getMyCertificates(req.user._id);
+    const result =
+      await getMyCertificates(
+        req.user._id,
+      );
 
     return res.status(200).json(result);
   } catch (error) {
-    console.error("Get Certificates Error:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    return handleError(
+      res,
+      error,
+      "Unable to retrieve certificates.",
+    );
   }
 };
 
 // ======================================
 // Get Certificate By ID
-// GET /api/certificates/:id
-// Authenticated
 // ======================================
-const getCertificate = async (req, res) => {
+
+const getCertificate = async (
+  req,
+  res,
+) => {
   try {
-    const result = await getCertificateById(req.params.id);
+    const result =
+      await getCertificateById(
+        req.params.id,
+        req.user._id,
+      );
 
     return res.status(200).json(result);
   } catch (error) {
-    console.error("Get Certificate Error:", error);
-
-    return res.status(404).json({
-      success: false,
-      message: error.message,
-    });
+    return handleError(
+      res,
+      error,
+      "Unable to retrieve certificate.",
+    );
   }
 };
 
 // ======================================
 // Verify Certificate
-// GET /api/certificates/verify/:verificationCode
-// Public
 // ======================================
-const verifyStudentCertificate = async (req, res) => {
+
+const verifyStudentCertificate = async (
+  req,
+  res,
+) => {
   try {
-    const result = await verifyCertificate(req.params.verificationCode);
+    const result =
+      await verifyCertificate(
+        req.params.verificationCode,
+      );
 
     return res.status(200).json(result);
   } catch (error) {
-    console.error("Verify Certificate Error:", error);
-
-    return res.status(404).json({
-      success: false,
-      message: error.message,
-    });
+    return handleError(
+      res,
+      error,
+      "Unable to verify certificate.",
+    );
   }
 };
 
 // ======================================
 // Revoke Certificate
-// PATCH /api/certificates/revoke/:id
-// Admin
 // ======================================
-const revokeStudentCertificate = async (req, res) => {
+
+const revokeStudentCertificate = async (
+  req,
+  res,
+) => {
   try {
     const { reason } = req.body;
 
-    const result = await revokeCertificate(req.params.id, reason);
+    const result =
+      await revokeCertificate(
+        req.params.id,
+        req.user._id,
+        reason,
+      );
 
     return res.status(200).json(result);
   } catch (error) {
-    console.error("Revoke Certificate Error:", error);
-
-    return res.status(400).json({
-      success: false,
-      message: error.message,
-    });
+    return handleError(
+      res,
+      error,
+      "Unable to revoke certificate.",
+    );
   }
 };
 
 // ======================================
-// Delete Certificate (Soft Delete)
-// DELETE /api/certificates/:id
-// Admin
+// Soft Delete Certificate
 // ======================================
-const deleteStudentCertificate = async (req, res) => {
+
+const deleteStudentCertificate = async (
+  req,
+  res,
+) => {
   try {
-    const result = await deleteCertificate(req.params.id);
+    const result =
+      await deleteCertificate(
+        req.params.id,
+      );
 
     return res.status(200).json(result);
   } catch (error) {
-    console.error("Delete Certificate Error:", error);
-
-    return res.status(400).json({
-      success: false,
-      message: error.message,
-    });
+    return handleError(
+      res,
+      error,
+      "Unable to delete certificate.",
+    );
   }
 };
 
 // ======================================
 // Restore Certificate
-// PATCH /api/certificates/restore/:id
-// Admin
 // ======================================
-const restoreStudentCertificate = async (req, res) => {
+
+const restoreStudentCertificate = async (
+  req,
+  res,
+) => {
   try {
-    const result = await restoreCertificate(req.params.id);
+    const result =
+      await restoreCertificate(
+        req.params.id,
+      );
 
     return res.status(200).json(result);
   } catch (error) {
-    console.error("Restore Certificate Error:", error);
-
-    return res.status(400).json({
-      success: false,
-      message: error.message,
-    });
+    return handleError(
+      res,
+      error,
+      "Unable to restore certificate.",
+    );
   }
 };
 

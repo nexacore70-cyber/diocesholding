@@ -1,7 +1,9 @@
 const LiveClass = require("../models/LiveClass");
+const Attendance = require("../models/Attendance");
 const Course = require("../models/Course");
 const Module = require("../models/Module");
 const Lesson = require("../models/Lesson");
+const Enrollment = require("../models/Enrollment");
 
 // ======================================
 // Create Live Class
@@ -22,14 +24,18 @@ const createLiveClass = async (data, tutorId) => {
     timezone,
   } = data;
 
-  // Verify Course
+  if (!course || !title || !meetingLink || !scheduledDate || !duration) {
+    throw new Error(
+      "Course, title, meeting link, scheduled date and duration are required.",
+    );
+  }
+
   const courseData = await Course.findById(course);
 
   if (!courseData) {
     throw new Error("Course not found.");
   }
 
-  // Verify Module (Optional)
   if (module) {
     const moduleData = await Module.findById(module);
 
@@ -38,7 +44,6 @@ const createLiveClass = async (data, tutorId) => {
     }
   }
 
-  // Verify Lesson (Optional)
   if (lesson) {
     const lessonData = await Lesson.findById(lesson);
 
@@ -49,19 +54,38 @@ const createLiveClass = async (data, tutorId) => {
 
   const liveClass = await LiveClass.create({
     course,
-    module,
-    lesson,
+    module: module || null,
+    lesson: lesson || null,
     title,
-    description,
-    provider,
+    description: description || "",
+    provider: provider || "custom",
     meetingLink,
-    meetingId,
-    meetingPassword,
+    meetingId: meetingId || "",
+    meetingPassword: meetingPassword || "",
     scheduledDate,
     duration,
-    timezone,
+    timezone: timezone || "Africa/Lagos",
     createdBy: tutorId,
   });
+
+  await liveClass.populate([
+    {
+      path: "course",
+      select: "title slug",
+    },
+    {
+      path: "module",
+      select: "title",
+    },
+    {
+      path: "lesson",
+      select: "title",
+    },
+    {
+      path: "createdBy",
+      select: "firstName lastName email",
+    },
+  ]);
 
   return {
     success: true,
@@ -141,7 +165,28 @@ const updateLiveClass = async (liveClassId, updateData) => {
     throw new Error("Live class not found.");
   }
 
-  Object.assign(liveClass, updateData);
+  const allowedFields = [
+    "course",
+    "module",
+    "lesson",
+    "title",
+    "description",
+    "provider",
+    "meetingLink",
+    "meetingId",
+    "meetingPassword",
+    "scheduledDate",
+    "duration",
+    "timezone",
+    "recordingUrl",
+    "status",
+  ];
+
+  allowedFields.forEach((field) => {
+    if (updateData[field] !== undefined) {
+      liveClass[field] = updateData[field];
+    }
+  });
 
   await liveClass.save();
 
@@ -181,6 +226,10 @@ const deleteLiveClass = async (liveClassId) => {
     throw new Error("Live class not found.");
   }
 
+  await Attendance.deleteMany({
+    liveClass: liveClassId,
+  });
+
   await liveClass.deleteOne();
 
   return {
@@ -190,7 +239,7 @@ const deleteLiveClass = async (liveClassId) => {
 };
 
 // ======================================
-// Schedule (Publish) Live Class
+// Schedule Live Class
 // ======================================
 const scheduleLiveClass = async (liveClassId) => {
   const liveClass = await LiveClass.findById(liveClassId);
@@ -261,6 +310,25 @@ const endLiveClass = async (liveClassId, recordingUrl = "") => {
 
   await liveClass.save();
 
+  // Automatically close active attendance records
+  const activeAttendance = await Attendance.find({
+    liveClass: liveClassId,
+    leftAt: null,
+  });
+
+  const now = new Date();
+
+  for (const attendance of activeAttendance) {
+    attendance.leftAt = now;
+
+    attendance.duration = Math.max(
+      0,
+      Math.floor((attendance.leftAt - attendance.joinedAt) / 60000),
+    );
+
+    await attendance.save();
+  }
+
   return {
     success: true,
     message: "Live class completed successfully.",
@@ -307,25 +375,56 @@ const joinLiveClass = async (liveClassId, studentId) => {
     throw new Error("This live class is not currently active.");
   }
 
-  const alreadyJoined = liveClass.attendance.find(
-    (item) => item.student.toString() === studentId.toString(),
-  );
-
-  if (alreadyJoined) {
-    throw new Error("You have already joined this live class.");
-  }
-
-  liveClass.attendance.push({
+  // Verify enrollment
+  const enrollment = await Enrollment.findOne({
     student: studentId,
-    joinedAt: new Date(),
+    course: liveClass.course,
+    status: "active",
   });
 
-  await liveClass.save();
+  if (!enrollment) {
+    throw new Error("You do not have active access to this course.");
+  }
+
+  // Prevent duplicate attendance
+  const existingAttendance = await Attendance.findOne({
+    liveClass: liveClassId,
+    student: studentId,
+  });
+
+  if (existingAttendance && !existingAttendance.leftAt) {
+    throw new Error("You are already in this live class.");
+  }
+
+  // Allow rejoining after leaving
+  if (existingAttendance && existingAttendance.leftAt) {
+    existingAttendance.joinedAt = new Date();
+    existingAttendance.leftAt = null;
+    existingAttendance.duration = 0;
+    existingAttendance.status = "present";
+
+    await existingAttendance.save();
+
+    return {
+      success: true,
+      message: "Rejoined live class successfully.",
+      data: existingAttendance,
+    };
+  }
+
+  const attendance = await Attendance.create({
+    liveClass: liveClassId,
+    student: studentId,
+    joinedAt: new Date(),
+    status: "present",
+  });
+
+  await attendance.populate("student", "firstName lastName email");
 
   return {
     success: true,
     message: "Joined live class successfully.",
-    data: liveClass,
+    data: attendance,
   };
 };
 
@@ -333,34 +432,36 @@ const joinLiveClass = async (liveClassId, studentId) => {
 // Leave Live Class
 // ======================================
 const leaveLiveClass = async (liveClassId, studentId) => {
-  const liveClass = await LiveClass.findById(liveClassId);
+  const attendance = await Attendance.findOne({
+    liveClass: liveClassId,
+    student: studentId,
+  });
 
-  if (!liveClass) {
-    throw new Error("Live class not found.");
-  }
-
-  const attendee = liveClass.attendance.find(
-    (item) => item.student.toString() === studentId.toString(),
-  );
-
-  if (!attendee) {
+  if (!attendance) {
     throw new Error("Attendance record not found.");
   }
 
-  if (attendee.leftAt) {
+  if (attendance.leftAt) {
     throw new Error("You have already left this live class.");
   }
 
-  attendee.leftAt = new Date();
+  const now = new Date();
 
-  attendee.duration = Math.floor((attendee.leftAt - attendee.joinedAt) / 60000);
+  attendance.leftAt = now;
 
-  await liveClass.save();
+  attendance.duration = Math.max(
+    0,
+    Math.floor((attendance.leftAt - attendance.joinedAt) / 60000),
+  );
+
+  await attendance.save();
+
+  await attendance.populate("student", "firstName lastName email");
 
   return {
     success: true,
     message: "Left live class successfully.",
-    data: attendee,
+    data: attendance,
   };
 };
 
@@ -368,19 +469,22 @@ const leaveLiveClass = async (liveClassId, studentId) => {
 // Get Attendance
 // ======================================
 const getLiveClassAttendance = async (liveClassId) => {
-  const liveClass = await LiveClass.findById(liveClassId).populate(
-    "attendance.student",
-    "firstName lastName email",
-  );
+  const liveClass = await LiveClass.findById(liveClassId);
 
   if (!liveClass) {
     throw new Error("Live class not found.");
   }
 
+  const attendance = await Attendance.find({
+    liveClass: liveClassId,
+  })
+    .populate("student", "firstName lastName email")
+    .sort({ joinedAt: 1 });
+
   return {
     success: true,
     message: "Attendance retrieved successfully.",
-    data: liveClass.attendance,
+    data: attendance,
   };
 };
 
