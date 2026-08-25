@@ -1,11 +1,17 @@
-const { getWallet } = require("../services/walletService");
+const {
+  getWallet,
+  getWalletBalance,
+} = require("../services/walletService");
 
-const { getUserLedger } = require("../services/ledgerService");
+const {
+  getUserLedger,
+} = require("../services/ledgerService");
 
 // ======================================
 // Get My Wallet
 // GET /api/wallet/me
 // ======================================
+
 const getMyWallet = async (req, res) => {
   try {
     const wallet = await getWallet(req.user._id);
@@ -26,12 +32,44 @@ const getMyWallet = async (req, res) => {
 };
 
 // ======================================
+// Get Wallet Balance
+// GET /api/wallet/balance
+// ======================================
+
+const getMyWalletBalance = async (req, res) => {
+  try {
+    const balance = await getWalletBalance(
+      req.user._id,
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Wallet balance retrieved successfully.",
+      data: balance,
+    });
+  } catch (error) {
+    console.error("Get Wallet Balance Error:", error);
+
+    return res.status(404).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// ======================================
 // Get My Ledger
 // GET /api/wallet/ledger
 // ======================================
+
 const getMyLedger = async (req, res) => {
   try {
-    const ledger = await getUserLedger(req.user._id);
+    const limit = Number(req.query.limit) || 50;
+
+    const ledger = await getUserLedger(
+      req.user._id,
+      limit,
+    );
 
     return res.status(200).json({
       success: true,
@@ -50,5 +88,6 @@ const getMyLedger = async (req, res) => {
 
 module.exports = {
   getMyWallet,
+  getMyWalletBalance,
   getMyLedger,
 };

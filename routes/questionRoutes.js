@@ -1,45 +1,59 @@
 const express = require("express");
+
 const router = express.Router();
 
 const {
   createNewQuestion,
-  getQuestions,
+  getQuizQuestions,
   getQuestion,
   updateExistingQuestion,
   deleteExistingQuestion,
+  publishExistingQuestion,
+  unpublishExistingQuestion,
 } = require("../controllers/questionController");
 
-const { protect } = require("../middleware/authMiddleware");
+const {
+  protect,
+} = require("../middleware/authMiddleware");
+
 const authorize = require("../middleware/authorize");
 
 // ======================================
-// Test Route
+// Test
 // ======================================
+
 router.get("/test", (req, res) => {
-  res.json({
+  return res.status(200).json({
     success: true,
     message: "Question routes are working.",
   });
 });
 
 // ======================================
-// Public Routes
+// Tutor/Admin
 // ======================================
 
-// Get All Questions
-router.get("/", getQuestions);
+router.get(
+  "/quiz/:quizId",
+  protect,
+  authorize("tutor", "admin"),
+  getQuizQuestions,
+);
 
-// Get Single Question
-router.get("/:id", getQuestion);
+router.get(
+  "/:id",
+  protect,
+  authorize("tutor", "admin"),
+  getQuestion,
+);
 
-// ======================================
-// Tutor/Admin Routes
-// ======================================
+router.post(
+  "/",
+  protect,
+  authorize("tutor", "admin"),
+  createNewQuestion,
+);
 
-// Create Question
-router.post("/", protect, authorize("tutor", "admin"), createNewQuestion);
-
-// Update Question
 router.put(
   "/:id",
   protect,
@@ -47,12 +61,25 @@ router.put(
   updateExistingQuestion,
 );
 
-// Delete Question
 router.delete(
   "/:id",
   protect,
   authorize("tutor", "admin"),
   deleteExistingQuestion,
+);
+
+router.patch(
+  "/:id/publish",
+  protect,
+  authorize("tutor", "admin"),
+  publishExistingQuestion,
+);
+
+router.patch(
+  "/:id/unpublish",
+  protect,
+  authorize("tutor", "admin"),
+  unpublishExistingQuestion,
 );
 
 module.exports = router;

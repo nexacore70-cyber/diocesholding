@@ -40,6 +40,9 @@ const liveClassRoutes = require("./routes/liveClassRoutes");
 const conversationRoutes = require("./routes/conversationRoutes");
 const messageRoutes = require("./routes/messageRoutes");
 const projectRoutes = require("./routes/projectRoutes");
+const cohortRoutes = require("./routes/cohortRoutes");
+const auditLogRoutes = require("./routes/auditLogRoutes");
+const assessmentResultRoutes = require("./routes/assessmentResultRoutes");
 
 // ======================================
 // App
@@ -53,8 +56,8 @@ const NODE_ENV = process.env.NODE_ENV || "development";
 
 const allowedOrigins = process.env.CLIENT_URL
   ? process.env.CLIENT_URL.split(",")
-      .map((origin) => origin.trim())
-      .filter(Boolean)
+    .map((origin) => origin.trim())
+    .filter(Boolean)
   : [];
 
 // ======================================
@@ -268,6 +271,15 @@ app.use("/api/conversations", conversationRoutes);
 app.use("/api/messages", messageRoutes);
 
 app.use("/api/projects", projectRoutes);
+
+app.use("/api/cohorts", cohortRoutes);
+
+app.use("/api/audit-logs", auditLogRoutes);
+
+app.use(
+  "/api/assessment-results",
+  assessmentResultRoutes,
+);
 
 // ======================================
 // Health Check

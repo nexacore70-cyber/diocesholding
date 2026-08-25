@@ -7,7 +7,11 @@ const mongoose = require("mongoose");
 const User = require("../models/User");
 const Certificate = require("../models/Certificate");
 const Enrollment = require("../models/Enrollment");
+
 const { createNotification } = require("./notificationService");
+
+// Change this import if your audit service uses another filename/export.
+const { createAuditLog } = require("./auditLogService");
 
 // ======================================
 // Helpers
@@ -22,7 +26,13 @@ const normalizeVerificationCode = (code) => {
     throw new Error("Verification code is required.");
   }
 
-  return code.trim().toLowerCase();
+  const normalized = code.trim().toLowerCase();
+
+  if (!/^[a-f0-9]{48}$/.test(normalized)) {
+    throw new Error("Invalid verification code.");
+  }
+
+  return normalized;
 };
 
 const normalizeReason = (reason) => {
@@ -47,21 +57,45 @@ const normalizeReason = (reason) => {
   return cleaned;
 };
 
+const ensureAdmin = async (userId) => {
+  if (!isValidObjectId(userId)) {
+    throw new Error("Invalid administrator ID.");
+  }
+
+  const admin = await User.findById(userId).select("_id role").lean();
+
+  if (!admin) {
+    throw new Error("User not found.");
+  }
+
+  if (admin.role !== "admin") {
+    throw new Error("Only administrators can perform this action.");
+  }
+
+  return admin;
+};
+
 // ======================================
-// Generate Certificate Number
+// Certificate Number
 // ======================================
 
-const generateCertificateNumber = async () => {
+const generateCertificateNumber = async (session = null) => {
   const year = new Date().getFullYear();
 
-  for (let attempt = 0; attempt < 10; attempt++) {
+  for (let attempt = 0; attempt < 20; attempt++) {
     const randomNumber = crypto.randomInt(100000, 1000000);
 
     const certificateNumber = `NCA-${year}-${randomNumber}`;
 
-    const exists = await Certificate.exists({
+    const query = Certificate.exists({
       certificateNumber,
     });
+
+    if (session) {
+      query.session(session);
+    }
+
+    const exists = await query;
 
     if (!exists) {
       return certificateNumber;
@@ -74,7 +108,7 @@ const generateCertificateNumber = async () => {
 };
 
 // ======================================
-// Generate Verification Code
+// Verification Code
 // ======================================
 
 const generateVerificationCode = () => {
@@ -87,7 +121,7 @@ const generateVerificationCode = () => {
 
 const generateCertificatePDF = (certificate, student, course) => {
   return new Promise((resolve, reject) => {
-    const folderPath = path.join(
+    const folderPath = path.resolve(
       __dirname,
       "../uploads/certificates",
     );
@@ -117,45 +151,51 @@ const generateCertificatePDF = (certificate, student, course) => {
 
     doc.pipe(stream);
 
-    doc.fontSize(30).text("NexaCore Academy", {
-      align: "center",
-    });
+    doc
+      .fontSize(30)
+      .text("NexaCore Academy", {
+        align: "center",
+      });
 
     doc.moveDown();
 
-    doc.fontSize(22).text("Certificate of Completion", {
-      align: "center",
-    });
+    doc
+      .fontSize(22)
+      .text("Certificate of Completion", {
+        align: "center",
+      });
 
     doc.moveDown(2);
 
-    doc.fontSize(16).text("This certifies that", {
-      align: "center",
-    });
-
-    doc.moveDown();
-
-    doc.fontSize(26).text(
-      `${student.firstName} ${student.lastName}`,
-      {
+    doc
+      .fontSize(16)
+      .text("This certifies that", {
         align: "center",
-      },
-    );
+      });
 
     doc.moveDown();
 
-    doc.fontSize(16).text(
-      "has successfully completed the course",
-      {
+    doc
+      .fontSize(26)
+      .text(`${student.firstName} ${student.lastName}`, {
         align: "center",
-      },
-    );
+      });
 
     doc.moveDown();
 
-    doc.fontSize(22).text(course.title, {
-      align: "center",
-    });
+    doc
+      .fontSize(16)
+      .text("has successfully completed the course", {
+        align: "center",
+      });
+
+    doc.moveDown();
+
+    doc
+      .fontSize(22)
+      .text(course.title, {
+        align: "center",
+      });
 
     doc.moveDown();
 
@@ -163,21 +203,22 @@ const generateCertificatePDF = (certificate, student, course) => {
       ? `${course.tutor.firstName} ${course.tutor.lastName}`
       : "NexaCore Academy";
 
-    doc.fontSize(16).text(
-      `Instructor: ${tutorName}`,
-      {
+    doc
+      .fontSize(16)
+      .text(`Instructor: ${tutorName}`, {
         align: "center",
-      },
-    );
+      });
 
     doc.moveDown();
 
-    doc.fontSize(16).text(
-      `Completion Date: ${certificate.issuedAt.toDateString()}`,
-      {
-        align: "center",
-      },
-    );
+    doc
+      .fontSize(16)
+      .text(
+        `Completion Date: ${certificate.issuedAt.toDateString()}`,
+        {
+          align: "center",
+        },
+      );
 
     doc.moveDown(2);
 
@@ -191,16 +232,15 @@ const generateCertificatePDF = (certificate, student, course) => {
       `Verification Code: ${certificate.verificationCode}`,
     );
 
-    const frontendUrl =
+    const frontendUrl = (
       process.env.FRONTEND_URL ||
-      "http://localhost:3000";
+      "http://localhost:3000"
+    ).replace(/\/+$/, "");
 
     const verificationUrl =
       `${frontendUrl}/verify/${certificate.verificationCode}`;
 
-    doc.text(
-      `Verification URL: ${verificationUrl}`,
-    );
+    doc.text(`Verification URL: ${verificationUrl}`);
 
     doc.text(
       `Issued On: ${certificate.issuedAt.toDateString()}`,
@@ -208,12 +248,13 @@ const generateCertificatePDF = (certificate, student, course) => {
 
     doc.moveDown(3);
 
-    doc.text(
-      "Verify this certificate using the verification code.",
-      {
-        align: "center",
-      },
-    );
+    doc
+      .text(
+        "Verify this certificate using the verification code.",
+        {
+          align: "center",
+        },
+      );
 
     doc.end();
 
@@ -224,9 +265,7 @@ const generateCertificatePDF = (certificate, student, course) => {
       });
     });
 
-    stream.on("error", (error) => {
-      reject(error);
-    });
+    stream.on("error", reject);
   });
 };
 
@@ -239,23 +278,7 @@ const issueCertificate = async (enrollmentId, issuedBy) => {
     throw new Error("Invalid enrollment ID.");
   }
 
-  if (!isValidObjectId(issuedBy)) {
-    throw new Error("Invalid administrator ID.");
-  }
-
-  const admin = await User.findById(issuedBy).select(
-    "_id role",
-  );
-
-  if (!admin) {
-    throw new Error("User not found.");
-  }
-
-  if (admin.role !== "admin") {
-    throw new Error(
-      "Only administrators can issue certificates.",
-    );
-  }
+  const admin = await ensureAdmin(issuedBy);
 
   const enrollment = await Enrollment.findById(enrollmentId)
     .populate("student", "firstName lastName")
@@ -272,15 +295,11 @@ const issueCertificate = async (enrollmentId, issuedBy) => {
   }
 
   if (!enrollment.student) {
-    throw new Error(
-      "Enrollment student information is missing.",
-    );
+    throw new Error("Enrollment student information is missing.");
   }
 
   if (!enrollment.course) {
-    throw new Error(
-      "Enrollment course information is missing.",
-    );
+    throw new Error("Enrollment course information is missing.");
   }
 
   if (enrollment.status !== "completed") {
@@ -301,10 +320,9 @@ const issueCertificate = async (enrollmentId, issuedBy) => {
     );
   }
 
-  const existingCertificate =
-    await Certificate.findOne({
-      enrollment: enrollment._id,
-    });
+  const existingCertificate = await Certificate.findOne({
+    enrollment: enrollment._id,
+  });
 
   if (existingCertificate) {
     throw new Error(
@@ -327,12 +345,9 @@ const issueCertificate = async (enrollmentId, issuedBy) => {
   };
 
   let generatedFile = null;
+  let certificate = null;
 
   try {
-    /*
-     * Generate the PDF before committing the transaction.
-     * If the transaction fails, the generated file is removed.
-     */
     generatedFile = await generateCertificatePDF(
       certificatePreview,
       enrollment.student,
@@ -341,20 +356,24 @@ const issueCertificate = async (enrollmentId, issuedBy) => {
 
     const session = await mongoose.startSession();
 
-    let certificate;
-
     try {
       await session.withTransaction(async () => {
-        /*
-         * Re-check inside the transaction to reduce race conditions.
-         */
         const lockedEnrollment =
-          await Enrollment.findById(enrollment._id).session(
-            session,
-          );
+          await Enrollment.findById(
+            enrollment._id,
+          ).session(session);
 
         if (!lockedEnrollment) {
           throw new Error("Enrollment not found.");
+        }
+
+        if (
+          lockedEnrollment.status !== "completed" ||
+          Number(lockedEnrollment.progress) < 100
+        ) {
+          throw new Error(
+            "Student has not completed this course.",
+          );
         }
 
         if (lockedEnrollment.certificateIssued) {
@@ -378,9 +397,9 @@ const issueCertificate = async (enrollmentId, issuedBy) => {
           await Certificate.create(
             [
               {
-                student: enrollment.student._id,
-                course: enrollment.course._id,
-                enrollment: enrollment._id,
+                student: lockedEnrollment.student,
+                course: lockedEnrollment.course,
+                enrollment: lockedEnrollment._id,
                 certificateNumber,
                 verificationCode,
                 issuedBy: admin._id,
@@ -388,7 +407,9 @@ const issueCertificate = async (enrollmentId, issuedBy) => {
                 pdfUrl: generatedFile.relativeUrl,
               },
             ],
-            { session },
+            {
+              session,
+            },
           );
 
         certificate = created[0];
@@ -403,16 +424,48 @@ const issueCertificate = async (enrollmentId, issuedBy) => {
       await session.endSession();
     }
 
-    /*
-     * Notification failure should NOT undo certificate issuance.
-     */
+    // ======================================
+    // Audit
+    // ======================================
+
     try {
-      await createNotification(
-        enrollment.student._id,
-        "certificate",
-        "Certificate Issued",
-        `Congratulations! Your certificate for "${enrollment.course.title}" has been issued successfully.`,
+      await createAuditLog({
+        actor: issuedBy,
+        action: "certificate_issued",
+        resource: "Certificate",
+        resourceId: certificate._id,
+        metadata: {
+          certificateNumber:
+            certificate.certificateNumber,
+          enrollment: enrollment._id,
+          student: enrollment.student._id,
+          course: enrollment.course._id,
+        },
+      });
+    } catch (auditError) {
+      console.error(
+        "Certificate issuance audit error:",
+        auditError,
       );
+    }
+
+    // ======================================
+    // Notification
+    // ======================================
+
+    try {
+      await createNotification({
+        recipient: enrollment.student._id,
+        type: "certificate",
+        title: "Certificate Issued",
+        message:
+          `Congratulations! Your certificate for "${enrollment.course.title}" has been issued successfully.`,
+        data: {
+          certificate: certificate._id,
+          course: enrollment.course._id,
+          enrollment: enrollment._id,
+        },
+      });
     } catch (notificationError) {
       console.error(
         "Certificate notification error:",
@@ -426,9 +479,6 @@ const issueCertificate = async (enrollmentId, issuedBy) => {
       data: certificate,
     };
   } catch (error) {
-    /*
-     * Remove orphaned PDF if database issuance failed.
-     */
     if (
       generatedFile &&
       generatedFile.filePath &&
@@ -469,7 +519,7 @@ const getMyCertificates = async (studentId) => {
     isDeleted: false,
   })
     .select(
-      "certificateNumber course issuedAt pdfUrl verificationCode status",
+      "certificateNumber course issuedAt pdfUrl status",
     )
     .populate("course", "title slug")
     .sort({
@@ -500,9 +550,9 @@ const getCertificateById = async (
     throw new Error("Invalid user ID.");
   }
 
-  const requester = await User.findById(requesterId).select(
-    "_id role",
-  );
+  const requester = await User.findById(requesterId)
+    .select("_id role")
+    .lean();
 
   if (!requester) {
     throw new Error("User not found.");
@@ -513,29 +563,32 @@ const getCertificateById = async (
     isDeleted: false,
   };
 
-  /*
-   * Students may only access their own certificate.
-   * Admins can access any certificate.
-   */
   if (requester.role !== "admin") {
     query.student = requesterId;
   }
 
-  const certificate = await Certificate.findOne(query)
-    .populate(
-      "student",
-      "firstName lastName email",
-    )
-    .populate("course", "title slug")
-    .populate(
-      "issuedBy",
-      "firstName lastName",
-    )
-    .populate(
-      "revokedBy",
-      "firstName lastName",
-    )
-    .lean();
+  const certificate =
+    await Certificate.findOne(query)
+      .select(
+        "-verificationCode",
+      )
+      .populate(
+        "student",
+        "firstName lastName email",
+      )
+      .populate(
+        "course",
+        "title slug",
+      )
+      .populate(
+        "issuedBy",
+        "firstName lastName",
+      )
+      .populate(
+        "revokedBy",
+        "firstName lastName",
+      )
+      .lean();
 
   if (!certificate) {
     throw new Error("Certificate not found.");
@@ -633,23 +686,7 @@ const revokeCertificate = async (
     throw new Error("Invalid certificate ID.");
   }
 
-  if (!isValidObjectId(revokedBy)) {
-    throw new Error("Invalid administrator ID.");
-  }
-
-  const admin = await User.findById(revokedBy).select(
-    "_id role",
-  );
-
-  if (!admin) {
-    throw new Error("User not found.");
-  }
-
-  if (admin.role !== "admin") {
-    throw new Error(
-      "Only administrators can revoke certificates.",
-    );
-  }
+  await ensureAdmin(revokedBy);
 
   const normalizedReason =
     normalizeReason(reason);
@@ -672,11 +709,29 @@ const revokeCertificate = async (
 
   certificate.status = "revoked";
   certificate.revokedAt = new Date();
-  certificate.revokedBy = admin._id;
-  certificate.revokedReason =
-    normalizedReason;
+  certificate.revokedBy = revokedBy;
+  certificate.revokedReason = normalizedReason;
 
   await certificate.save();
+
+  try {
+    await createAuditLog({
+      actor: revokedBy,
+      action: "certificate_revoked",
+      resource: "Certificate",
+      resourceId: certificate._id,
+      metadata: {
+        certificateNumber:
+          certificate.certificateNumber,
+        reason: normalizedReason,
+      },
+    });
+  } catch (auditError) {
+    console.error(
+      "Certificate revocation audit error:",
+      auditError,
+    );
+  }
 
   return {
     success: true,
@@ -691,10 +746,13 @@ const revokeCertificate = async (
 
 const deleteCertificate = async (
   certificateId,
+  deletedBy,
 ) => {
   if (!isValidObjectId(certificateId)) {
     throw new Error("Invalid certificate ID.");
   }
+
+  await ensureAdmin(deletedBy);
 
   const certificate =
     await Certificate.findOne({
@@ -710,6 +768,24 @@ const deleteCertificate = async (
 
   await certificate.save();
 
+  try {
+    await createAuditLog({
+      actor: deletedBy,
+      action: "certificate_deleted",
+      resource: "Certificate",
+      resourceId: certificate._id,
+      metadata: {
+        certificateNumber:
+          certificate.certificateNumber,
+      },
+    });
+  } catch (auditError) {
+    console.error(
+      "Certificate deletion audit error:",
+      auditError,
+    );
+  }
+
   return {
     success: true,
     message: "Certificate deleted successfully.",
@@ -722,10 +798,13 @@ const deleteCertificate = async (
 
 const restoreCertificate = async (
   certificateId,
+  restoredBy,
 ) => {
   if (!isValidObjectId(certificateId)) {
     throw new Error("Invalid certificate ID.");
   }
+
+  await ensureAdmin(restoredBy);
 
   const certificate =
     await Certificate.findOne({
@@ -740,6 +819,24 @@ const restoreCertificate = async (
   certificate.isDeleted = false;
 
   await certificate.save();
+
+  try {
+    await createAuditLog({
+      actor: restoredBy,
+      action: "certificate_restored",
+      resource: "Certificate",
+      resourceId: certificate._id,
+      metadata: {
+        certificateNumber:
+          certificate.certificateNumber,
+      },
+    });
+  } catch (auditError) {
+    console.error(
+      "Certificate restoration audit error:",
+      auditError,
+    );
+  }
 
   return {
     success: true,

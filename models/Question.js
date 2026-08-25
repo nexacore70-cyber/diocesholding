@@ -71,6 +71,12 @@ const questionSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+
+    isDeleted: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
   },
   {
     timestamps: true,
@@ -109,6 +115,8 @@ questionSchema.pre("validate", function (next) {
 
 questionSchema.index({
   quiz: 1,
+  status: 1,
+  isDeleted: 1,
   order: 1,
 });
 

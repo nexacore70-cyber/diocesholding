@@ -1,4 +1,5 @@
 const express = require("express");
+
 const router = express.Router();
 
 const {
@@ -6,27 +7,22 @@ const {
   getStudentSubmissions,
   getSubmission,
   gradeStudentSubmission,
+  returnStudentSubmission,
 } = require("../controllers/assignmentSubmissionController");
 
-const { protect } = require("../middleware/authMiddleware");
-const authorize = require("../middleware/authorize");
+const {
+  protect,
+} = require("../middleware/authMiddleware");
 
-// ======================================
-// Test Route
-// ======================================
-router.get("/test", (req, res) => {
-  res.json({
-    success: true,
-    message: "Assignment Submission routes are working.",
-  });
-});
+const authorize = require("../middleware/authorize");
 
 // ======================================
 // Student Routes
 // ======================================
 
-// Submit Assignment
+// Submit assignment
 // POST /api/assignment-submissions/:assignmentId/submit
+
 router.post(
   "/:assignmentId/submit",
   protect,
@@ -34,8 +30,9 @@ router.post(
   submitStudentAssignment,
 );
 
-// Get My Submissions
+// Get own submissions
 // GET /api/assignment-submissions/my-submissions
+
 router.get(
   "/my-submissions",
   protect,
@@ -44,20 +41,37 @@ router.get(
 );
 
 // ======================================
-// Tutor/Admin Routes
+// Tutor / Admin Routes
 // ======================================
 
-// View Submission
+// Get submission
 // GET /api/assignment-submissions/:id
-router.get("/:id", protect, authorize("tutor", "admin"), getSubmission);
 
-// Grade Submission
+router.get(
+  "/:id",
+  protect,
+  authorize("tutor", "admin"),
+  getSubmission,
+);
+
+// Grade submission
 // PATCH /api/assignment-submissions/:id/grade
+
 router.patch(
   "/:id/grade",
   protect,
   authorize("tutor", "admin"),
   gradeStudentSubmission,
+);
+
+// Return submission for revision
+// PATCH /api/assignment-submissions/:id/return
+
+router.patch(
+  "/:id/return",
+  protect,
+  authorize("tutor", "admin"),
+  returnStudentSubmission,
 );
 
 module.exports = router;

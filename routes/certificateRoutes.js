@@ -12,11 +12,14 @@ const {
   restoreStudentCertificate,
 } = require("../controllers/certificateController");
 
-const { protect } = require("../middleware/authMiddleware");
+const {
+  protect,
+} = require("../middleware/authMiddleware");
+
 const authorize = require("../middleware/authorize");
 
 // ======================================
-// Test Route
+// Test
 // ======================================
 
 router.get("/test", (req, res) => {
@@ -27,10 +30,9 @@ router.get("/test", (req, res) => {
 });
 
 // ======================================
-// Public
+// Public Verification
 // ======================================
 
-// Verify certificate
 router.get(
   "/verify/:verificationCode",
   verifyStudentCertificate,
@@ -40,7 +42,6 @@ router.get(
 // Student
 // ======================================
 
-// Get student's certificates
 router.get(
   "/my-certificates",
   protect,
@@ -49,13 +50,9 @@ router.get(
 );
 
 // ======================================
-// Authenticated
+// Authenticated Certificate Access
 // ======================================
 
-// Get certificate
-//
-// Students can only access their own certificate.
-// Admins can access any certificate.
 router.get(
   "/:id",
   protect,
@@ -66,7 +63,7 @@ router.get(
 // Admin
 // ======================================
 
-// Issue certificate
+// Issue
 router.post(
   "/issue/:enrollmentId",
   protect,
@@ -74,7 +71,7 @@ router.post(
   issueStudentCertificate,
 );
 
-// Revoke certificate
+// Revoke
 router.patch(
   "/revoke/:id",
   protect,
@@ -82,7 +79,7 @@ router.patch(
   revokeStudentCertificate,
 );
 
-// Soft delete certificate
+// Soft Delete
 router.delete(
   "/:id",
   protect,
@@ -90,7 +87,7 @@ router.delete(
   deleteStudentCertificate,
 );
 
-// Restore certificate
+// Restore
 router.patch(
   "/restore/:id",
   protect,

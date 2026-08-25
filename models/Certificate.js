@@ -24,6 +24,7 @@ const certificateSchema = new mongoose.Schema(
       required: true,
       unique: true,
       immutable: true,
+      index: true,
     },
 
     certificateNumber: {
@@ -44,6 +45,7 @@ const certificateSchema = new mongoose.Schema(
       lowercase: true,
       immutable: true,
       index: true,
+      select: false,
     },
 
     issuedBy: {
@@ -123,7 +125,7 @@ certificateSchema.index({
 });
 
 /*
- * Validate revoked state.
+ * Validate certificate state.
  */
 certificateSchema.pre("validate", function (next) {
   if (this.status === "revoked") {
@@ -148,5 +150,46 @@ certificateSchema.pre("validate", function (next) {
 
   next();
 });
+
+/*
+ * Prevent accidental mutation of immutable certificate fields
+ * through updateOne/findOneAndUpdate/findByIdAndUpdate.
+ */
+certificateSchema.pre(
+  ["updateOne", "updateMany", "findOneAndUpdate", "findByIdAndUpdate"],
+  function (next) {
+    const update = this.getUpdate();
+
+    if (!update) {
+      return next();
+    }
+
+    const immutableFields = [
+      "student",
+      "course",
+      "enrollment",
+      "certificateNumber",
+      "verificationCode",
+      "issuedBy",
+      "issuedAt",
+    ];
+
+    for (const field of immutableFields) {
+      if (update[field] !== undefined) {
+        delete update[field];
+      }
+
+      if (update.$set && update.$set[field] !== undefined) {
+        delete update.$set[field];
+      }
+
+      if (update.$unset && update.$unset[field] !== undefined) {
+        delete update.$unset[field];
+      }
+    }
+
+    next();
+  },
+);
 
 module.exports = mongoose.model("Certificate", certificateSchema);

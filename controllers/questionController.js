@@ -1,23 +1,31 @@
 const {
   createQuestion,
-  getAllQuestions,
+  getQuestionsByQuiz,
   getQuestionById,
   updateQuestion,
   deleteQuestion,
+  publishQuestion,
+  unpublishQuestion,
 } = require("../services/questionService");
 
 // ======================================
 // Create Question
-// @route POST /api/questions
-// @access Tutor/Admin
+// POST /api/questions
 // ======================================
+
 const createNewQuestion = async (req, res) => {
   try {
-    const result = await createQuestion(req.body, req.user._id);
+    const result = await createQuestion(
+      req.body,
+      req.user._id,
+    );
 
     return res.status(201).json(result);
   } catch (error) {
-    console.error("Create Question Error:", error);
+    console.error(
+      "Create Question Error:",
+      error,
+    );
 
     return res.status(400).json({
       success: false,
@@ -27,19 +35,24 @@ const createNewQuestion = async (req, res) => {
 };
 
 // ======================================
-// Get All Questions
-// @route GET /api/questions
-// @access Public
+// Get Questions By Quiz
+// GET /api/questions/quiz/:quizId
 // ======================================
-const getQuestions = async (req, res) => {
+
+const getQuizQuestions = async (req, res) => {
   try {
-    const result = await getAllQuestions();
+    const result = await getQuestionsByQuiz(
+      req.params.quizId,
+    );
 
     return res.status(200).json(result);
   } catch (error) {
-    console.error("Get Questions Error:", error);
+    console.error(
+      "Get Quiz Questions Error:",
+      error,
+    );
 
-    return res.status(500).json({
+    return res.status(404).json({
       success: false,
       message: error.message,
     });
@@ -47,17 +60,22 @@ const getQuestions = async (req, res) => {
 };
 
 // ======================================
-// Get Single Question
-// @route GET /api/questions/:id
-// @access Public
+// Get Question
+// GET /api/questions/:id
 // ======================================
+
 const getQuestion = async (req, res) => {
   try {
-    const result = await getQuestionById(req.params.id);
+    const result = await getQuestionById(
+      req.params.id,
+    );
 
     return res.status(200).json(result);
   } catch (error) {
-    console.error("Get Question Error:", error);
+    console.error(
+      "Get Question Error:",
+      error,
+    );
 
     return res.status(404).json({
       success: false,
@@ -68,16 +86,25 @@ const getQuestion = async (req, res) => {
 
 // ======================================
 // Update Question
-// @route PUT /api/questions/:id
-// @access Tutor/Admin
+// PUT /api/questions/:id
 // ======================================
-const updateExistingQuestion = async (req, res) => {
+
+const updateExistingQuestion = async (
+  req,
+  res,
+) => {
   try {
-    const result = await updateQuestion(req.params.id, req.body);
+    const result = await updateQuestion(
+      req.params.id,
+      req.body,
+    );
 
     return res.status(200).json(result);
   } catch (error) {
-    console.error("Update Question Error:", error);
+    console.error(
+      "Update Question Error:",
+      error,
+    );
 
     return res.status(400).json({
       success: false,
@@ -88,16 +115,24 @@ const updateExistingQuestion = async (req, res) => {
 
 // ======================================
 // Delete Question
-// @route DELETE /api/questions/:id
-// @access Tutor/Admin
+// DELETE /api/questions/:id
 // ======================================
-const deleteExistingQuestion = async (req, res) => {
+
+const deleteExistingQuestion = async (
+  req,
+  res,
+) => {
   try {
-    const result = await deleteQuestion(req.params.id);
+    const result = await deleteQuestion(
+      req.params.id,
+    );
 
     return res.status(200).json(result);
   } catch (error) {
-    console.error("Delete Question Error:", error);
+    console.error(
+      "Delete Question Error:",
+      error,
+    );
 
     return res.status(404).json({
       success: false,
@@ -106,10 +141,72 @@ const deleteExistingQuestion = async (req, res) => {
   }
 };
 
+// ======================================
+// Publish Question
+// PATCH /api/questions/:id/publish
+// ======================================
+
+const publishExistingQuestion = async (
+  req,
+  res,
+) => {
+  try {
+    const result = await publishQuestion(
+      req.params.id,
+    );
+
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error(
+      "Publish Question Error:",
+      error,
+    );
+
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// ======================================
+// Unpublish Question
+// PATCH /api/questions/:id/unpublish
+// ======================================
+
+const unpublishExistingQuestion = async (
+  req,
+  res,
+) => {
+  try {
+    const result = await unpublishQuestion(
+      req.params.id,
+    );
+
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error(
+      "Unpublish Question Error:",
+      error,
+    );
+
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// ======================================
+// Export
+// ======================================
+
 module.exports = {
   createNewQuestion,
-  getQuestions,
+  getQuizQuestions,
   getQuestion,
   updateExistingQuestion,
   deleteExistingQuestion,
+  publishExistingQuestion,
+  unpublishExistingQuestion,
 };

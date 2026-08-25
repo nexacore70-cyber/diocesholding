@@ -361,7 +361,7 @@ userSchema.index({
 // Normalize User Fields
 // ======================================
 
-userSchema.pre("validate", function (next) {
+userSchema.pre("validate", function () {
   // ======================================
   // Normalize Username
   // ======================================
@@ -391,8 +391,6 @@ userSchema.pre("validate", function (next) {
       ),
     ];
   }
-
-  next();
 });
 
 // ======================================
@@ -406,9 +404,9 @@ userSchema.pre("validate", function (next) {
 // we just hardened.
 //
 
-userSchema.pre("save", function (next) {
+userSchema.pre("save", function () {
   if (!this.isModified("password")) {
-    return next();
+    return;
   }
 
   // Don't set the timestamp for a brand-new account
@@ -416,15 +414,13 @@ userSchema.pre("save", function (next) {
   if (!this.isNew) {
     this.passwordChangedAt = new Date();
   }
-
-  next();
 });
 
 // ======================================
 // Account Status Consistency
 // ======================================
 
-userSchema.pre("validate", function (next) {
+userSchema.pre("validate", function () {
   // ======================================
   // Banned Account
   // ======================================
@@ -476,8 +472,6 @@ userSchema.pre("validate", function (next) {
   if (this.status === "pending") {
     this.isActive = false;
   }
-
-  next();
 });
 
 // ======================================
@@ -490,11 +484,11 @@ userSchema.pre("validate", function (next) {
 // findOneAndUpdate.
 //
 
-userSchema.pre("findOneAndUpdate", function (next) {
+userSchema.pre("findOneAndUpdate", function () {
   const update = this.getUpdate();
 
   if (!update) {
-    return next();
+    return;
   }
 
   const password = update.password || (update.$set && update.$set.password);
@@ -508,8 +502,6 @@ userSchema.pre("findOneAndUpdate", function (next) {
       };
     }
   }
-
-  next();
 });
 
 // ======================================
@@ -517,17 +509,17 @@ userSchema.pre("findOneAndUpdate", function (next) {
 // findOneAndUpdate
 // ======================================
 
-userSchema.pre("findOneAndUpdate", function (next) {
+userSchema.pre("findOneAndUpdate", function () {
   const update = this.getUpdate();
 
   if (!update) {
-    return next();
+    return;
   }
 
   const status = update.status || (update.$set && update.$set.status);
 
   if (!status) {
-    return next();
+    return;
   }
 
   if (!update.$set) {
@@ -567,8 +559,6 @@ userSchema.pre("findOneAndUpdate", function (next) {
   if (status === "pending") {
     update.$set.isActive = false;
   }
-
-  next();
 });
 
 // ======================================

@@ -1,4 +1,5 @@
 const express = require("express");
+
 const router = express.Router();
 
 const {
@@ -6,6 +7,8 @@ const {
   getQuizzes,
   getQuiz,
   updateExistingQuiz,
+  publishExistingQuiz,
+  archiveExistingQuiz,
   deleteExistingQuiz,
   restoreExistingQuiz,
 } = require("../controllers/quizController");
@@ -14,39 +17,63 @@ const { protect } = require("../middleware/authMiddleware");
 const authorize = require("../middleware/authorize");
 
 // ======================================
-// Test Route
+// Test
 // ======================================
+
 router.get("/test", (req, res) => {
-  res.json({
+  return res.status(200).json({
     success: true,
     message: "Quiz routes are working.",
   });
 });
 
 // ======================================
-// Public Routes
+// Public
 // ======================================
 
-// Get All Quizzes
 router.get("/", getQuizzes);
 
-// Get Single Quiz
 router.get("/:id", getQuiz);
 
 // ======================================
-// Tutor/Admin Routes
+// Tutor/Admin
 // ======================================
 
-// Create Quiz
-router.post("/", protect, authorize("tutor", "admin"), createNewQuiz);
+router.post(
+  "/",
+  protect,
+  authorize("tutor", "admin"),
+  createNewQuiz,
+);
 
-// Update Quiz
-router.put("/:id", protect, authorize("tutor", "admin"), updateExistingQuiz);
+router.put(
+  "/:id",
+  protect,
+  authorize("tutor", "admin"),
+  updateExistingQuiz,
+);
 
-// Soft Delete Quiz
-router.delete("/:id", protect, authorize("tutor", "admin"), deleteExistingQuiz);
+router.patch(
+  "/:id/publish",
+  protect,
+  authorize("tutor", "admin"),
+  publishExistingQuiz,
+);
 
-// Restore Quiz
+router.patch(
+  "/:id/archive",
+  protect,
+  authorize("tutor", "admin"),
+  archiveExistingQuiz,
+);
+
+router.delete(
+  "/:id",
+  protect,
+  authorize("tutor", "admin"),
+  deleteExistingQuiz,
+);
+
 router.patch(
   "/restore/:id",
   protect,

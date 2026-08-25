@@ -25,10 +25,6 @@ const handleControllerError = (
     error,
   );
 
-  // ======================================
-  // Mongoose Validation Error
-  // ======================================
-
   if (error.name === "ValidationError") {
     const message =
       Object.values(error.errors)[0]?.message ||
@@ -40,20 +36,12 @@ const handleControllerError = (
     });
   }
 
-  // ======================================
-  // Cast Error
-  // ======================================
-
   if (error.name === "CastError") {
     return res.status(400).json({
       success: false,
       message: "Invalid identifier.",
     });
   }
-
-  // ======================================
-  // Duplicate Key
-  // ======================================
 
   if (error.code === 11000) {
     return res.status(409).json({
@@ -63,26 +51,16 @@ const handleControllerError = (
     });
   }
 
-  // ======================================
-  // Service Error
-  // ======================================
-
   if (
     error.statusCode &&
     error.statusCode >= 400 &&
     error.statusCode < 500
   ) {
-    return res
-      .status(error.statusCode)
-      .json({
-        success: false,
-        message: error.message,
-      });
+    return res.status(error.statusCode).json({
+      success: false,
+      message: error.message,
+    });
   }
-
-  // ======================================
-  // Internal Server Error
-  // ======================================
 
   return res.status(500).json({
     success: false,
@@ -91,9 +69,7 @@ const handleControllerError = (
 };
 
 // ======================================
-// Start Quiz Attempt
-// ======================================
-// POST /api/quiz-attempts/quizzes/:quizId/start
+// Start Quiz
 // ======================================
 
 const startQuizAttempt = async (
@@ -122,9 +98,9 @@ const startQuizAttempt = async (
       req.user._id,
     );
 
-    return res.status(
-      result.resumed ? 200 : 201,
-    ).json(result);
+    return res
+      .status(result.resumed ? 200 : 201)
+      .json(result);
   } catch (error) {
     return handleControllerError(
       res,
@@ -135,9 +111,7 @@ const startQuizAttempt = async (
 };
 
 // ======================================
-// Submit Quiz Attempt
-// ======================================
-// POST /api/quiz-attempts/:attemptId/submit
+// Submit Quiz
 // ======================================
 
 const submitQuizAttempt = async (
@@ -188,9 +162,7 @@ const submitQuizAttempt = async (
 };
 
 // ======================================
-// Get Quiz Attempt
-// ======================================
-// GET /api/quiz-attempts/:attemptId
+// Get Single Attempt
 // ======================================
 
 const getSingleQuizAttempt = async (
@@ -232,10 +204,7 @@ const getSingleQuizAttempt = async (
 };
 
 // ======================================
-// Get Student Quiz Attempts
-// ======================================
-// GET /api/quiz-attempts
-// GET /api/quiz-attempts?quizId=...
+// Get My Attempts
 // ======================================
 
 const getMyQuizAttempts = async (
@@ -277,10 +246,6 @@ const getMyQuizAttempts = async (
     );
   }
 };
-
-// ======================================
-// Export
-// ======================================
 
 module.exports = {
   startQuizAttempt,

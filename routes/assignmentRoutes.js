@@ -1,4 +1,5 @@
 const express = require("express");
+
 const router = express.Router();
 
 const {
@@ -9,36 +10,32 @@ const {
   updateAssignmentDetails,
   removeAssignment,
   publishAssignmentNow,
+  closeAssignmentNow,
 } = require("../controllers/assignmentController");
 
-const { protect } = require("../middleware/authMiddleware");
-const authorize = require("../middleware/authorize");
+const {
+  protect,
+} = require("../middleware/authMiddleware");
 
-// ======================================
-// Test Route
-// ======================================
-router.get("/test", (req, res) => {
-  res.json({
-    success: true,
-    message: "Assignment routes are working.",
-  });
-});
+const authorize = require("../middleware/authorize");
 
 // ======================================
 // Student / Tutor / Admin
 // ======================================
 
-// Get all assignments for a course
+// Get course assignments
 router.get(
   "/course/:courseId",
   protect,
+  authorize("student", "tutor", "admin"),
   getAssignmentsByCourse,
 );
 
-// Get all assignments for a lesson
+// Get lesson assignments
 router.get(
   "/lesson/:lessonId",
   protect,
+  authorize("student", "tutor", "admin"),
   getLessonAssignments,
 );
 
@@ -46,6 +43,7 @@ router.get(
 router.get(
   "/:id",
   protect,
+  authorize("student", "tutor", "admin"),
   getAssignment,
 );
 
@@ -75,6 +73,14 @@ router.patch(
   protect,
   authorize("tutor", "admin"),
   publishAssignmentNow,
+);
+
+// Close assignment
+router.patch(
+  "/:id/close",
+  protect,
+  authorize("tutor", "admin"),
+  closeAssignmentNow,
 );
 
 // Delete assignment

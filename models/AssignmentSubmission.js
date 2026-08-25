@@ -1,7 +1,45 @@
 const mongoose = require("mongoose");
 
+const submittedFileSchema = new mongoose.Schema(
+  {
+    fileName: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 255,
+    },
+
+    fileUrl: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 2000,
+    },
+
+    fileType: {
+      type: String,
+      required: true,
+      trim: true,
+      lowercase: true,
+      maxlength: 100,
+    },
+
+    fileSize: {
+      type: Number,
+      required: true,
+      min: 1,
+    },
+  },
+  {
+    _id: false,
+  },
+);
+
 const assignmentSubmissionSchema = new mongoose.Schema(
   {
+    // ======================================
+    // Assignment
+    // ======================================
     assignment: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Assignment",
@@ -9,6 +47,9 @@ const assignmentSubmissionSchema = new mongoose.Schema(
       index: true,
     },
 
+    // ======================================
+    // Student
+    // ======================================
     student: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -16,6 +57,9 @@ const assignmentSubmissionSchema = new mongoose.Schema(
       index: true,
     },
 
+    // ======================================
+    // Enrollment
+    // ======================================
     enrollment: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Enrollment",
@@ -23,123 +67,145 @@ const assignmentSubmissionSchema = new mongoose.Schema(
       index: true,
     },
 
+    // ======================================
+    // Current Submission Attempt
+    // ======================================
     attemptNumber: {
       type: Number,
-      default: 1,
-    },
-
-    lastSubmittedAt: {
-      type: Date,
-      default: Date.now,
-    },
-
-    // Submission attempt
-    attemptNumber: {
-      type: Number,
+      required: true,
       default: 1,
       min: 1,
     },
 
-    // Student text answer
+    // ======================================
+    // Student Text Answer
+    // ======================================
     submissionText: {
       type: String,
       trim: true,
+      maxlength: 50000,
       default: "",
     },
 
+    // ======================================
     // GitHub Repository
+    // ======================================
     githubUrl: {
       type: String,
       trim: true,
+      maxlength: 2000,
       default: "",
     },
 
-    // Google Drive / OneDrive / Dropbox etc.
+    // ======================================
+    // External Drive / Link
+    // ======================================
     driveUrl: {
       type: String,
       trim: true,
+      maxlength: 2000,
       default: "",
     },
 
-    // Uploaded files
-    submittedFiles: [
-      {
-        fileName: {
-          type: String,
-          trim: true,
-        },
+    // ======================================
+    // Uploaded Files
+    // ======================================
+    submittedFiles: {
+      type: [submittedFileSchema],
+      default: [],
+    },
 
-        fileUrl: {
-          type: String,
-          trim: true,
-        },
+    // ======================================
+    // Submission Times
+    // ======================================
+    submittedAt: {
+      type: Date,
+      required: true,
+      default: Date.now,
+    },
 
-        fileType: {
-          type: String,
-          trim: true,
-        },
+    lastSubmittedAt: {
+      type: Date,
+      required: true,
+      default: Date.now,
+    },
 
-        fileSize: Number,
-      },
-    ],
+    // ======================================
+    // Late Submission
+    // ======================================
+    isLate: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
 
-    // Marks awarded
+    // ======================================
+    // Score
+    // ======================================
     score: {
       type: Number,
       default: null,
       min: 0,
     },
 
-    // Passed assignment?
+    // ======================================
+    // Passed
+    // ======================================
     passed: {
       type: Boolean,
       default: false,
     },
 
-    // Tutor feedback
+    // ======================================
+    // Tutor Feedback
+    // ======================================
     feedback: {
       type: String,
       trim: true,
+      maxlength: 20000,
       default: "",
     },
 
-    // Internal grading remarks
+    // ======================================
+    // Internal Grading Remarks
+    // ======================================
     gradingRemarks: {
       type: String,
       trim: true,
+      maxlength: 20000,
       default: "",
     },
 
-    // AI plagiarism score (future)
+    // ======================================
+    // Future AI Plagiarism Score
+    // ======================================
     plagiarismScore: {
       type: Number,
-      default: 0,
+      default: null,
       min: 0,
       max: 100,
     },
 
+    // ======================================
+    // Graded By
+    // ======================================
     gradedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       default: null,
     },
 
-    submittedAt: {
-      type: Date,
-      default: Date.now,
-    },
-
+    // ======================================
+    // Graded At
+    // ======================================
     gradedAt: {
       type: Date,
       default: null,
     },
 
-    // Was submission late?
-    isLate: {
-      type: Boolean,
-      default: false,
-    },
-
+    // ======================================
+    // Submission Status
+    // ======================================
     status: {
       type: String,
       enum: ["submitted", "graded", "returned", "late"],
@@ -152,7 +218,12 @@ const assignmentSubmissionSchema = new mongoose.Schema(
   },
 );
 
-// One active submission per assignment/student
+// ======================================
+// Indexes
+// ======================================
+
+// One current submission per
+// student per assignment.
 assignmentSubmissionSchema.index(
   {
     assignment: 1,
@@ -163,16 +234,35 @@ assignmentSubmissionSchema.index(
   },
 );
 
-// Useful indexes
+// Student submission history
 assignmentSubmissionSchema.index({
   student: 1,
   status: 1,
+  createdAt: -1,
 });
 
+// Assignment grading queue
 assignmentSubmissionSchema.index({
   assignment: 1,
   status: 1,
+  createdAt: -1,
 });
+
+// Tutor grading queries
+assignmentSubmissionSchema.index({
+  gradedBy: 1,
+  gradedAt: -1,
+});
+
+// Enrollment submissions
+assignmentSubmissionSchema.index({
+  enrollment: 1,
+  createdAt: -1,
+});
+
+// ======================================
+// Export
+// ======================================
 
 module.exports = mongoose.model(
   "AssignmentSubmission",

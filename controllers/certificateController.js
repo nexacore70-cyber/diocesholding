@@ -15,14 +15,15 @@ const {
 const handleError = (res, error, fallback) => {
   console.error(fallback, error);
 
-  const message = error?.message || fallback;
+  const message =
+    error?.message || fallback;
 
-  const normalized = message.toLowerCase();
+  const normalized =
+    message.toLowerCase();
 
   if (
     normalized.includes("not found") ||
-    normalized.includes("does not exist") ||
-    normalized.includes("invalid")
+    normalized.includes("does not exist")
   ) {
     return res.status(404).json({
       success: false,
@@ -31,10 +32,18 @@ const handleError = (res, error, fallback) => {
   }
 
   if (
+    normalized.includes("invalid")
+  ) {
+    return res.status(400).json({
+      success: false,
+      message,
+    });
+  }
+
+  if (
     normalized.includes("already") ||
-    normalized.includes("cannot") ||
     normalized.includes("only administrators") ||
-    normalized.includes("not authorized")
+    normalized.includes("has not completed")
   ) {
     return res.status(409).json({
       success: false,
@@ -42,9 +51,20 @@ const handleError = (res, error, fallback) => {
     });
   }
 
-  return res.status(400).json({
+  if (
+    normalized.includes("required") ||
+    normalized.includes("cannot exceed") ||
+    normalized.includes("must be")
+  ) {
+    return res.status(400).json({
+      success: false,
+      message,
+    });
+  }
+
+  return res.status(500).json({
     success: false,
-    message,
+    message: "An unexpected error occurred.",
   });
 };
 
@@ -98,7 +118,7 @@ const getStudentCertificates = async (
 };
 
 // ======================================
-// Get Certificate By ID
+// Get Certificate
 // ======================================
 
 const getCertificate = async (
@@ -175,7 +195,7 @@ const revokeStudentCertificate = async (
 };
 
 // ======================================
-// Soft Delete Certificate
+// Delete Certificate
 // ======================================
 
 const deleteStudentCertificate = async (
@@ -186,6 +206,7 @@ const deleteStudentCertificate = async (
     const result =
       await deleteCertificate(
         req.params.id,
+        req.user._id,
       );
 
     return res.status(200).json(result);
@@ -210,6 +231,7 @@ const restoreStudentCertificate = async (
     const result =
       await restoreCertificate(
         req.params.id,
+        req.user._id,
       );
 
     return res.status(200).json(result);

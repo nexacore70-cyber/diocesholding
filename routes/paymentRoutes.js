@@ -1,28 +1,50 @@
 const express = require("express");
-const router = express.Router();
 
 const {
   initializeStudentPayment,
   verifyStudentPayment,
+  paystackWebhook,
   getPayment,
   getMyPayments,
 } = require("../controllers/paymentController");
 
-const { protect } = require("../middleware/authMiddleware");
+const {
+  protect,
+} = require("../middleware/authMiddleware");
+
 const authorize = require("../middleware/authorize");
+
+const router = express.Router();
 
 // ======================================
 // Test Route
 // ======================================
+
 router.get("/test", (req, res) => {
-  res.json({
+  return res.status(200).json({
     success: true,
     message: "Payment routes are working.",
   });
 });
 
 // ======================================
-// Student Routes
+// Paystack Webhook
+//
+// IMPORTANT:
+// This route MUST receive the raw body.
+// See server.js placement below.
+// ======================================
+
+router.post(
+  "/webhook/paystack",
+  express.raw({
+    type: "application/json",
+  }),
+  paystackWebhook,
+);
+
+// ======================================
+// Student
 // ======================================
 
 // Initialize Payment
@@ -33,22 +55,31 @@ router.post(
   initializeStudentPayment,
 );
 
-// My Payments
-router.get("/my-payments", protect, authorize("student"), getMyPayments);
-
-// ======================================
-// Admin/Tutor Routes
-// ======================================
-
 // Verify Payment
 router.patch(
   "/verify/:reference",
   protect,
-  authorize("admin", "tutor"),
+  authorize("student"),
   verifyStudentPayment,
 );
 
-// Get Payment By Reference
-router.get("/:reference", protect, authorize("admin", "tutor"), getPayment);
+// My Payments
+router.get(
+  "/my-payments",
+  protect,
+  authorize("student"),
+  getMyPayments,
+);
+
+// ======================================
+// Authenticated Payment Lookup
+// ======================================
+
+router.get(
+  "/:reference",
+  protect,
+  authorize("student", "tutor", "admin"),
+  getPayment,
+);
 
 module.exports = router;

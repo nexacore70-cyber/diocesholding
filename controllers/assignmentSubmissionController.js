@@ -3,104 +3,153 @@ const {
   getMySubmissions,
   getSubmissionById,
   gradeSubmission,
+  returnSubmission,
 } = require("../services/assignmentSubmissionService");
 
 // ======================================
 // Submit Assignment
-// @route POST /api/assignment-submissions/:assignmentId/submit
-// @access Student
+// POST /api/assignment-submissions/:assignmentId/submit
+// Student
 // ======================================
-const submitStudentAssignment = async (req, res) => {
+
+const submitStudentAssignment = async (
+  req,
+  res,
+  next,
+) => {
   try {
-    const result = await submitAssignment(
-      req.params.assignmentId,
-      req.user._id,
-      req.body,
-    );
+    const result =
+      await submitAssignment(
+        req.params.assignmentId,
+        req.user._id,
+        req.body,
+      );
 
     return res.status(201).json(result);
   } catch (error) {
-    console.error("Submit Assignment Error:", error);
-
-    return res.status(400).json({
-      success: false,
-      message: error.message,
-    });
+    return next(error);
   }
 };
 
 // ======================================
 // Get My Submissions
-// @route GET /api/assignment-submissions/my-submissions
-// @access Student
+// GET /api/assignment-submissions/my-submissions
+// Student
 // ======================================
-const getStudentSubmissions = async (req, res) => {
+
+const getStudentSubmissions = async (
+  req,
+  res,
+  next,
+) => {
   try {
-    const result = await getMySubmissions(req.user._id);
+    const result =
+      await getMySubmissions(
+        req.user._id,
+      );
 
     return res.status(200).json(result);
   } catch (error) {
-    console.error("Get My Submissions Error:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    return next(error);
   }
 };
 
 // ======================================
-// Get Submission By ID
-// @route GET /api/assignment-submissions/:id
-// @access Tutor/Admin
+// Get Submission
+// GET /api/assignment-submissions/:id
+// Tutor/Admin
 // ======================================
-const getSubmission = async (req, res) => {
+
+const getSubmission = async (
+  req,
+  res,
+  next,
+) => {
   try {
-    const result = await getSubmissionById(req.params.id);
+    const result =
+      await getSubmissionById(
+        req.params.id,
+        req.user,
+      );
 
     return res.status(200).json(result);
   } catch (error) {
-    console.error("Get Submission Error:", error);
-
-    return res.status(404).json({
-      success: false,
-      message: error.message,
-    });
+    return next(error);
   }
 };
 
 // ======================================
 // Grade Submission
-// @route PATCH /api/assignment-submissions/:id/grade
-// @access Tutor/Admin
+// PATCH /api/assignment-submissions/:id/grade
+// Tutor/Admin
 // ======================================
-const gradeStudentSubmission = async (req, res) => {
-  try {
-    const { score, feedback = "", gradingRemarks = "" } = req.body;
 
-    if (score === undefined || score === null) {
+const gradeStudentSubmission = async (
+  req,
+  res,
+  next,
+) => {
+  try {
+    const {
+      score,
+      feedback = "",
+      gradingRemarks = "",
+    } = req.body;
+
+    if (
+      score === undefined ||
+      score === null ||
+      score === ""
+    ) {
       return res.status(400).json({
         success: false,
         message: "Score is required.",
       });
     }
 
-    const result = await gradeSubmission(
-      req.params.id,
-      req.user._id,
-      Number(score),
-      feedback,
-      gradingRemarks,
-    );
+    const result =
+      await gradeSubmission(
+        req.params.id,
+        req.user._id,
+        score,
+        feedback,
+        gradingRemarks,
+      );
 
     return res.status(200).json(result);
   } catch (error) {
-    console.error("Grade Submission Error:", error);
+    return next(error);
+  }
+};
 
-    return res.status(400).json({
-      success: false,
-      message: error.message,
-    });
+// ======================================
+// Return Submission
+// PATCH /api/assignment-submissions/:id/return
+// Tutor/Admin
+// ======================================
+
+const returnStudentSubmission = async (
+  req,
+  res,
+  next,
+) => {
+  try {
+    const {
+      feedback = "",
+      gradingRemarks = "",
+    } = req.body;
+
+    const result =
+      await returnSubmission(
+        req.params.id,
+        req.user._id,
+        feedback,
+        gradingRemarks,
+      );
+
+    return res.status(200).json(result);
+  } catch (error) {
+    return next(error);
   }
 };
 
@@ -109,4 +158,5 @@ module.exports = {
   getStudentSubmissions,
   getSubmission,
   gradeStudentSubmission,
+  returnStudentSubmission,
 };

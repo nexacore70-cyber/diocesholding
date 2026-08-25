@@ -8,6 +8,7 @@ const QUIZ_ATTEMPT_STATUSES = [
   "in_progress",
   "submitted",
   "graded",
+  "expired",
 ];
 
 // ======================================
@@ -19,17 +20,14 @@ const quizAnswerSchema = new mongoose.Schema(
     question: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Question",
-      required: [true, "Question is required."],
+      required: true,
     },
 
     selectedAnswer: {
       type: String,
       default: "",
       trim: true,
-      maxlength: [
-        5000,
-        "Selected answer cannot exceed 5,000 characters.",
-      ],
+      maxlength: 5000,
     },
 
     isCorrect: {
@@ -54,60 +52,45 @@ const quizAnswerSchema = new mongoose.Schema(
 
 const quizAttemptSchema = new mongoose.Schema(
   {
-    // ======================================
-    // Quiz
-    // ======================================
-
     quiz: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Quiz",
-      required: [true, "Quiz is required."],
+      required: true,
       index: true,
     },
-
-    // ======================================
-    // Student
-    // ======================================
 
     student: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: [true, "Student is required."],
+      required: true,
       index: true,
     },
-
-    // ======================================
-    // Enrollment
-    // ======================================
 
     enrollment: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Enrollment",
-      required: [true, "Enrollment is required."],
+      required: true,
       index: true,
     },
-
-    // ======================================
-    // Attempt Number
-    // ======================================
 
     attemptNumber: {
       type: Number,
       required: true,
       default: 1,
-      min: [
-        1,
-        "Attempt number must be at least 1.",
-      ],
+      min: 1,
       validate: {
         validator: Number.isInteger,
         message: "Attempt number must be a whole number.",
       },
     },
 
-    // ======================================
-    // Answers
-    // ======================================
+    // Questions assigned to this attempt
+    questionSet: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Question",
+      },
+    ],
 
     answers: {
       type: [quizAnswerSchema],
@@ -124,6 +107,11 @@ const quizAttemptSchema = new mongoose.Schema(
       required: true,
     },
 
+    expiresAt: {
+      type: Date,
+      required: true,
+    },
+
     submittedAt: {
       type: Date,
       default: null,
@@ -132,14 +120,7 @@ const quizAttemptSchema = new mongoose.Schema(
     timeSpent: {
       type: Number,
       default: 0,
-      min: [
-        0,
-        "Time spent cannot be negative.",
-      ],
-      validate: {
-        validator: Number.isFinite,
-        message: "Time spent must be a valid number.",
-      },
+      min: 0,
     },
 
     // ======================================
@@ -150,20 +131,12 @@ const quizAttemptSchema = new mongoose.Schema(
       type: Number,
       default: 0,
       min: 0,
-      validate: {
-        validator: Number.isFinite,
-        message: "Score must be a valid number.",
-      },
     },
 
     totalMarks: {
       type: Number,
       default: 0,
       min: 0,
-      validate: {
-        validator: Number.isFinite,
-        message: "Total marks must be a valid number.",
-      },
     },
 
     percentage: {
@@ -171,10 +144,6 @@ const quizAttemptSchema = new mongoose.Schema(
       default: 0,
       min: 0,
       max: 100,
-      validate: {
-        validator: Number.isFinite,
-        message: "Percentage must be a valid number.",
-      },
     },
 
     passed: {
@@ -183,22 +152,15 @@ const quizAttemptSchema = new mongoose.Schema(
     },
 
     // ======================================
-    // Attempt Status
+    // Status
     // ======================================
 
     status: {
       type: String,
-      enum: {
-        values: QUIZ_ATTEMPT_STATUSES,
-        message: "Invalid quiz attempt status.",
-      },
+      enum: QUIZ_ATTEMPT_STATUSES,
       default: "in_progress",
       index: true,
     },
-
-    // ======================================
-    // Record Status
-    // ======================================
 
     isActive: {
       type: Boolean,
@@ -235,25 +197,21 @@ const quizAttemptSchema = new mongoose.Schema(
 // Indexes
 // ======================================
 
-// Student's attempts for a quiz
 quizAttemptSchema.index({
   quiz: 1,
   student: 1,
 });
 
-// Enrollment attempts
 quizAttemptSchema.index({
   enrollment: 1,
   createdAt: -1,
 });
 
-// Student attempt history
 quizAttemptSchema.index({
   student: 1,
   createdAt: -1,
 });
 
-// Attempt number uniqueness
 quizAttemptSchema.index(
   {
     quiz: 1,
@@ -265,7 +223,6 @@ quizAttemptSchema.index(
   },
 );
 
-// Active attempt lookup
 quizAttemptSchema.index({
   quiz: 1,
   student: 1,
@@ -275,50 +232,42 @@ quizAttemptSchema.index({
 });
 
 // ======================================
-// Validation Hooks
+// Validation
 // ======================================
 
 quizAttemptSchema.pre("validate", function (next) {
-  // ======================================
-  // Submitted/Graded Consistency
-  // ======================================
-
+  // Submitted / graded / expired
   if (
-    (this.status === "submitted" || this.status === "graded") &&
-    !this.submittedAt
+    ["submitted", "graded", "expired"].includes(
+      this.status,
+    )
   ) {
-    this.submittedAt = new Date();
+    if (!this.submittedAt) {
+      this.submittedAt = new Date();
+    }
+
+    this.isActive = false;
   }
 
-  // ======================================
-  // In-Progress Consistency
-  // ======================================
-
+  // In progress
   if (this.status === "in_progress") {
     this.submittedAt = null;
     this.passed = false;
+    this.isActive = true;
   }
 
-  // ======================================
-  // Deleted Consistency
-  // ======================================
-
-  if (this.isDeleted === true) {
+  // Deleted
+  if (this.isDeleted) {
     this.isActive = false;
 
     if (!this.deletedAt) {
       this.deletedAt = new Date();
     }
-  }
-
-  if (this.isDeleted === false) {
+  } else {
     this.deletedAt = null;
   }
 
-  // ======================================
-  // Score Consistency
-  // ======================================
-
+  // Score validation
   if (this.totalMarks === 0) {
     this.score = 0;
     this.percentage = 0;
@@ -327,16 +276,14 @@ quizAttemptSchema.pre("validate", function (next) {
 
   if (this.score > this.totalMarks) {
     return next(
-      new Error("Quiz score cannot exceed total marks."),
+      new Error(
+        "Quiz score cannot exceed total marks.",
+      ),
     );
   }
 
   next();
 });
-
-// ======================================
-// Export
-// ======================================
 
 module.exports = mongoose.model(
   "QuizAttempt",

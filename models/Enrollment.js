@@ -16,6 +16,13 @@ const enrollmentSchema = new mongoose.Schema(
       index: true,
     },
 
+    cohort: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Cohort",
+      default: null,
+      index: true,
+    },
+
     status: {
       type: String,
       enum: ["active", "completed", "cancelled", "suspended"],

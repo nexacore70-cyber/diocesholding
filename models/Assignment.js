@@ -1,5 +1,27 @@
 const mongoose = require("mongoose");
 
+const assignmentAttachmentSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+      minlength: 1,
+      maxlength: 255,
+    },
+
+    url: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 2000,
+    },
+  },
+  {
+    _id: false,
+  },
+);
+
 const assignmentSchema = new mongoose.Schema(
   {
     // ======================================
@@ -9,6 +31,7 @@ const assignmentSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Lesson",
       required: true,
+      index: true,
     },
 
     // ======================================
@@ -18,6 +41,7 @@ const assignmentSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Module",
       required: true,
+      index: true,
     },
 
     // ======================================
@@ -27,6 +51,7 @@ const assignmentSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Course",
       required: true,
+      index: true,
     },
 
     // ======================================
@@ -66,6 +91,7 @@ const assignmentSchema = new mongoose.Schema(
     // ======================================
     maxScore: {
       type: Number,
+      required: true,
       default: 100,
       min: 1,
       max: 100000,
@@ -76,15 +102,10 @@ const assignmentSchema = new mongoose.Schema(
     // ======================================
     passingScore: {
       type: Number,
+      required: true,
       default: 50,
       min: 0,
       max: 100000,
-      validate: {
-        validator: function (value) {
-          return value <= this.maxScore;
-        },
-        message: "Passing score cannot exceed maximum score.",
-      },
     },
 
     // ======================================
@@ -102,6 +123,7 @@ const assignmentSchema = new mongoose.Schema(
       type: String,
       enum: ["text", "file", "github", "link", "mixed"],
       default: "mixed",
+      index: true,
     },
 
     // ======================================
@@ -121,6 +143,7 @@ const assignmentSchema = new mongoose.Schema(
 
     // ======================================
     // Maximum Upload Size
+    // Bytes
     // ======================================
     maxFileSize: {
       type: Number,
@@ -144,29 +167,14 @@ const assignmentSchema = new mongoose.Schema(
       type: String,
       enum: ["draft", "published", "closed"],
       default: "draft",
+      index: true,
     },
 
     // ======================================
     // Tutor Resources
     // ======================================
     attachments: {
-      type: [
-        {
-          name: {
-            type: String,
-            required: true,
-            trim: true,
-            maxlength: 255,
-          },
-
-          url: {
-            type: String,
-            required: true,
-            trim: true,
-            maxlength: 2000,
-          },
-        },
-      ],
+      type: [assignmentAttachmentSchema],
       default: [],
     },
 
@@ -177,6 +185,7 @@ const assignmentSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
+      index: true,
     },
   },
   {
@@ -185,35 +194,66 @@ const assignmentSchema = new mongoose.Schema(
 );
 
 // ======================================
+// Validation
+// ======================================
+
+assignmentSchema.pre("validate", function (next) {
+  if (
+    this.maxScore !== undefined &&
+    this.passingScore !== undefined &&
+    this.passingScore > this.maxScore
+  ) {
+    return next(
+      new Error("Passing score cannot exceed maximum score."),
+    );
+  }
+
+  if (this.dueDate && Number.isNaN(this.dueDate.getTime())) {
+    return next(new Error("Invalid assignment due date."));
+  }
+
+  next();
+});
+
+// ======================================
 // Indexes
 // ======================================
 
-// Course assignments
+// Course + lesson
 assignmentSchema.index({
   course: 1,
   lesson: 1,
 });
 
-// Course + status queries
+// Course + status
 assignmentSchema.index({
   course: 1,
   status: 1,
 });
 
-// Creator queries
-assignmentSchema.index({
-  createdBy: 1,
-});
-
-// Lesson assignments
+// Lesson + status
 assignmentSchema.index({
   lesson: 1,
+  status: 1,
 });
 
-// Module assignments
+// Module + status
 assignmentSchema.index({
   module: 1,
+  status: 1,
 });
+
+// Prevent duplicate assignment titles
+// within the same lesson.
+assignmentSchema.index(
+  {
+    lesson: 1,
+    title: 1,
+  },
+  {
+    unique: true,
+  },
+);
 
 // ======================================
 // Export

@@ -3,17 +3,22 @@ const {
   getAllQuizzes,
   getQuizById,
   updateQuiz,
+  publishQuiz,
+  archiveQuiz,
   deleteQuiz,
   restoreQuiz,
 } = require("../services/quizService");
 
 // ======================================
 // Create Quiz
-// @route POST /api/quizzes
 // ======================================
+
 const createNewQuiz = async (req, res) => {
   try {
-    const result = await createQuiz(req.body, req.user._id);
+    const result = await createQuiz(
+      req.body,
+      req.user._id,
+    );
 
     return res.status(201).json(result);
   } catch (error) {
@@ -28,8 +33,8 @@ const createNewQuiz = async (req, res) => {
 
 // ======================================
 // Get All Quizzes
-// @route GET /api/quizzes
 // ======================================
+
 const getQuizzes = async (req, res) => {
   try {
     const result = await getAllQuizzes();
@@ -46,9 +51,9 @@ const getQuizzes = async (req, res) => {
 };
 
 // ======================================
-// Get Quiz By ID
-// @route GET /api/quizzes/:id
+// Get Quiz
 // ======================================
+
 const getQuiz = async (req, res) => {
   try {
     const result = await getQuizById(req.params.id);
@@ -66,11 +71,14 @@ const getQuiz = async (req, res) => {
 
 // ======================================
 // Update Quiz
-// @route PUT /api/quizzes/:id
 // ======================================
+
 const updateExistingQuiz = async (req, res) => {
   try {
-    const result = await updateQuiz(req.params.id, req.body);
+    const result = await updateQuiz(
+      req.params.id,
+      req.body,
+    );
 
     return res.status(200).json(result);
   } catch (error) {
@@ -84,9 +92,47 @@ const updateExistingQuiz = async (req, res) => {
 };
 
 // ======================================
-// Delete Quiz (Soft Delete)
-// @route DELETE /api/quizzes/:id
+// Publish Quiz
 // ======================================
+
+const publishExistingQuiz = async (req, res) => {
+  try {
+    const result = await publishQuiz(req.params.id);
+
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error("Publish Quiz Error:", error);
+
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// ======================================
+// Archive Quiz
+// ======================================
+
+const archiveExistingQuiz = async (req, res) => {
+  try {
+    const result = await archiveQuiz(req.params.id);
+
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error("Archive Quiz Error:", error);
+
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// ======================================
+// Delete Quiz
+// ======================================
+
 const deleteExistingQuiz = async (req, res) => {
   try {
     const result = await deleteQuiz(req.params.id);
@@ -104,8 +150,8 @@ const deleteExistingQuiz = async (req, res) => {
 
 // ======================================
 // Restore Quiz
-// @route PATCH /api/quizzes/restore/:id
 // ======================================
+
 const restoreExistingQuiz = async (req, res) => {
   try {
     const result = await restoreQuiz(req.params.id);
@@ -126,6 +172,8 @@ module.exports = {
   getQuizzes,
   getQuiz,
   updateExistingQuiz,
+  publishExistingQuiz,
+  archiveExistingQuiz,
   deleteExistingQuiz,
   restoreExistingQuiz,
 };

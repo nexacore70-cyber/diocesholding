@@ -6,150 +6,199 @@ const {
   updateAssignment,
   deleteAssignment,
   publishAssignment,
+  closeAssignment,
 } = require("../services/assignmentService");
 
 // ======================================
 // Create Assignment
-// @route POST /api/assignments
-// @access Tutor/Admin
+// POST /api/assignments
+// Tutor/Admin
 // ======================================
-const createNewAssignment = async (req, res) => {
+
+const createNewAssignment = async (
+  req,
+  res,
+  next,
+) => {
   try {
-    const result = await createAssignment(req.body, req.user._id);
+    const result =
+      await createAssignment(
+        req.body,
+        req.user._id,
+      );
 
     return res.status(201).json(result);
   } catch (error) {
-    console.error("Create Assignment Error:", error);
-
-    return res.status(400).json({
-      success: false,
-      message: error.message,
-    });
+    return next(error);
   }
 };
 
 // ======================================
 // Get Assignment By ID
-// @route GET /api/assignments/:id
-// @access Authenticated
+// GET /api/assignments/:id
+// Authenticated
 // ======================================
-const getAssignment = async (req, res) => {
+
+const getAssignment = async (
+  req,
+  res,
+  next,
+) => {
   try {
-    const result = await getAssignmentById(req.params.id);
+    const result =
+      await getAssignmentById(
+        req.params.id,
+        req.user,
+      );
 
     return res.status(200).json(result);
   } catch (error) {
-    console.error("Get Assignment Error:", error);
-
-    return res.status(404).json({
-      success: false,
-      message: error.message,
-    });
+    return next(error);
   }
 };
 
 // ======================================
 // Get Course Assignments
-// @route GET /api/assignments/course/:courseId
-// @access Authenticated
+// GET /api/assignments/course/:courseId
+// Authenticated
 // ======================================
-const getAssignmentsByCourse = async (req, res) => {
-  try {
-    const publishedOnly = req.user?.roles?.includes("student");
 
-    const result = await getCourseAssignments(
-      req.params.courseId,
-      publishedOnly,
-    );
+const getAssignmentsByCourse = async (
+  req,
+  res,
+  next,
+) => {
+  try {
+    const result =
+      await getCourseAssignments(
+        req.params.courseId,
+        req.user,
+      );
 
     return res.status(200).json(result);
   } catch (error) {
-    console.error("Get Course Assignments Error:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    return next(error);
   }
 };
 
 // ======================================
 // Get Lesson Assignments
-// @route GET /api/assignments/lesson/:lessonId
-// @access Authenticated
+// GET /api/assignments/lesson/:lessonId
+// Authenticated
 // ======================================
-const getLessonAssignments = async (req, res) => {
+
+const getLessonAssignments = async (
+  req,
+  res,
+  next,
+) => {
   try {
-    const result = await getAssignmentsByLesson(req.params.lessonId);
+    const result =
+      await getAssignmentsByLesson(
+        req.params.lessonId,
+        req.user,
+      );
 
     return res.status(200).json(result);
   } catch (error) {
-    console.error("Get Lesson Assignments Error:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    return next(error);
   }
 };
 
 // ======================================
 // Update Assignment
-// @route PUT /api/assignments/:id
-// @access Tutor/Admin
+// PUT /api/assignments/:id
+// Tutor/Admin
 // ======================================
-const updateAssignmentDetails = async (req, res) => {
+
+const updateAssignmentDetails = async (
+  req,
+  res,
+  next,
+) => {
   try {
-    const result = await updateAssignment(req.params.id, req.body);
+    const result =
+      await updateAssignment(
+        req.params.id,
+        req.body,
+        req.user,
+      );
 
     return res.status(200).json(result);
   } catch (error) {
-    console.error("Update Assignment Error:", error);
-
-    return res.status(400).json({
-      success: false,
-      message: error.message,
-    });
+    return next(error);
   }
 };
 
 // ======================================
 // Delete Assignment
-// @route DELETE /api/assignments/:id
-// @access Tutor/Admin
+// DELETE /api/assignments/:id
+// Tutor/Admin
 // ======================================
-const removeAssignment = async (req, res) => {
+
+const removeAssignment = async (
+  req,
+  res,
+  next,
+) => {
   try {
-    const result = await deleteAssignment(req.params.id);
+    const result =
+      await deleteAssignment(
+        req.params.id,
+        req.user,
+      );
 
     return res.status(200).json(result);
   } catch (error) {
-    console.error("Delete Assignment Error:", error);
-
-    return res.status(400).json({
-      success: false,
-      message: error.message,
-    });
+    return next(error);
   }
 };
 
 // ======================================
 // Publish Assignment
-// @route PATCH /api/assignments/:id/publish
-// @access Tutor/Admin
+// PATCH /api/assignments/:id/publish
+// Tutor/Admin
 // ======================================
-const publishAssignmentNow = async (req, res) => {
+
+const publishAssignmentNow = async (
+  req,
+  res,
+  next,
+) => {
   try {
-    const result = await publishAssignment(req.params.id);
+    const result =
+      await publishAssignment(
+        req.params.id,
+        req.user,
+      );
 
     return res.status(200).json(result);
   } catch (error) {
-    console.error("Publish Assignment Error:", error);
+    return next(error);
+  }
+};
 
-    return res.status(400).json({
-      success: false,
-      message: error.message,
-    });
+// ======================================
+// Close Assignment
+// PATCH /api/assignments/:id/close
+// Tutor/Admin
+// ======================================
+
+const closeAssignmentNow = async (
+  req,
+  res,
+  next,
+) => {
+  try {
+    const result =
+      await closeAssignment(
+        req.params.id,
+        req.user,
+      );
+
+    return res.status(200).json(result);
+  } catch (error) {
+    return next(error);
   }
 };
 
@@ -161,4 +210,5 @@ module.exports = {
   updateAssignmentDetails,
   removeAssignment,
   publishAssignmentNow,
+  closeAssignmentNow,
 };

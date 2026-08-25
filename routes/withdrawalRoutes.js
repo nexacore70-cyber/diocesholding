@@ -5,30 +5,43 @@ const {
   getWithdrawals,
   getPendingWithdrawalRequests,
   approveWithdrawalRequest,
+  markWithdrawalPaid,
   rejectWithdrawalRequest,
 } = require("../controllers/withdrawalController");
 
-const { protect } = require("../middleware/authMiddleware");
+const {
+  protect,
+} = require("../middleware/authMiddleware");
+
 const authorize = require("../middleware/authorize");
 
 const router = express.Router();
 
 // ======================================
-// Tutor Request Withdrawal
-// POST /api/withdrawals
+// Tutor
 // ======================================
-router.post("/", protect, authorize("tutor"), createWithdrawal);
+
+// Request withdrawal
+router.post(
+  "/",
+  protect,
+  authorize("tutor"),
+  createWithdrawal,
+);
+
+// Get own withdrawals
+router.get(
+  "/my-withdrawals",
+  protect,
+  authorize("tutor"),
+  getWithdrawals,
+);
 
 // ======================================
-// Get My Withdrawals
-// GET /api/withdrawals/my-withdrawals
+// Admin
 // ======================================
-router.get("/my-withdrawals", protect, getWithdrawals);
 
-// ======================================
-// Admin: Get Pending Withdrawals
-// GET /api/withdrawals/pending
-// ======================================
+// Pending withdrawals
 router.get(
   "/pending",
   protect,
@@ -36,10 +49,7 @@ router.get(
   getPendingWithdrawalRequests,
 );
 
-// ======================================
-// Admin: Approve Withdrawal
-// PATCH /api/withdrawals/:id/approve
-// ======================================
+// Approve withdrawal
 router.patch(
   "/:id/approve",
   protect,
@@ -47,10 +57,15 @@ router.patch(
   approveWithdrawalRequest,
 );
 
-// ======================================
-// Admin: Reject Withdrawal
-// PATCH /api/withdrawals/:id/reject
-// ======================================
+// Mark payment as completed
+router.patch(
+  "/:id/paid",
+  protect,
+  authorize("admin"),
+  markWithdrawalPaid,
+);
+
+// Reject withdrawal
 router.patch(
   "/:id/reject",
   protect,

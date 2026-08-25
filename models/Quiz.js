@@ -48,11 +48,13 @@ const quizSchema = new mongoose.Schema(
     totalMarks: {
       type: Number,
       default: 0,
+      min: 0,
     },
 
     totalQuestions: {
       type: Number,
       default: 0,
+      min: 0,
     },
 
     maxAttempts: {
@@ -93,7 +95,11 @@ const quizSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["draft", "published", "archived"],
+      enum: [
+        "draft",
+        "published",
+        "archived",
+      ],
       default: "draft",
     },
 
@@ -123,4 +129,13 @@ quizSchema.index({
   isDeleted: 1,
 });
 
-module.exports = mongoose.model("Quiz", quizSchema);
+quizSchema.index({
+  status: 1,
+  isActive: 1,
+  isDeleted: 1,
+});
+
+module.exports = mongoose.model(
+  "Quiz",
+  quizSchema,
+);
