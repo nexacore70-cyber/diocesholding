@@ -4,10 +4,13 @@ const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 const hpp = require("hpp");
 const path = require("path");
+const expressLayouts = require("express-ejs-layouts");
+const cookieParser = require("cookie-parser");
 
 // ======================================
 // Routes
 // ======================================
+
 const authRoutes = require("./routes/authRoutes");
 const profileRoutes = require("./routes/profileRoutes");
 const courseRoutes = require("./routes/courseRoutes");
@@ -47,24 +50,27 @@ const assessmentResultRoutes = require("./routes/assessmentResultRoutes");
 // ======================================
 // App
 // ======================================
+
 const app = express();
 
 // ======================================
 // Environment
 // ======================================
+
 const NODE_ENV = process.env.NODE_ENV || "development";
 
 const allowedOrigins = process.env.CLIENT_URL
-  ? process.env.CLIENT_URL.split(",")
-    .map((origin) => origin.trim())
-    .filter(Boolean)
+  ? process.env.CLIENT_URL
+      .split(",")
+      .map((origin) => origin.trim())
+      .filter(Boolean)
   : [];
+
 
 // ======================================
 // Trust Proxy
 // ======================================
-// Required when deployed behind a reverse proxy
-// such as Render, Railway, Nginx, Cloudflare, etc.
+
 if (NODE_ENV === "production") {
   app.set("trust proxy", 1);
 }
@@ -72,6 +78,7 @@ if (NODE_ENV === "production") {
 // ======================================
 // Security Headers - Helmet
 // ======================================
+
 app.use(
   helmet({
     crossOriginResourcePolicy: {
@@ -83,6 +90,7 @@ app.use(
 // ======================================
 // CORS
 // ======================================
+
 app.use(
   cors({
     origin: (origin, callback) => {
@@ -121,6 +129,7 @@ app.use(
 // ======================================
 // Body Parsing
 // ======================================
+
 app.use(
   express.json({
     limit: "2mb",
@@ -135,13 +144,53 @@ app.use(
 );
 
 // ======================================
+// Cookie Parser
+// ======================================
+
+app.use(cookieParser());
+
+// ======================================
+// DEBUG REQUEST LOGGER
+// ======================================
+
+app.use((req, res, next) => {
+  console.log("\n======================================");
+  console.log("🌐 INCOMING REQUEST");
+  console.log("Method:", req.method);
+  console.log("URL:", req.originalUrl);
+  console.log("Authorization:", req.headers.authorization || "NONE");
+  console.log("Cookies:", req.headers.cookie || "NONE");
+  console.log("======================================");
+
+  next();
+});
+
+// ======================================
+// DEBUG RESPONSE LOGGER
+// ======================================
+
+app.use((req, res, next) => {
+  const originalJson = res.json.bind(res);
+
+  res.json = (data) => {
+    console.log("\n======================================");
+    console.log("📤 JSON RESPONSE");
+    console.log("Method:", req.method);
+    console.log("URL:", req.originalUrl);
+    console.log("Status:", res.statusCode);
+    console.log("Response:", data);
+    console.log("======================================\n");
+
+    return originalJson(data);
+  };
+
+  next();
+});
+
+// ======================================
 // HTTP Parameter Pollution Protection
 // ======================================
-// Prevent duplicate query/body parameters such as:
-//
-// ?role=student&role=admin
-//
-// HPP keeps the last value by default.
+
 app.use(hpp());
 
 // ======================================
@@ -151,6 +200,7 @@ app.use(hpp());
 // --------------------------------------
 // General API Limiter
 // --------------------------------------
+
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
 
@@ -168,6 +218,7 @@ const apiLimiter = rateLimit({
 // --------------------------------------
 // Authentication Limiter
 // --------------------------------------
+
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
 
@@ -195,6 +246,7 @@ app.use("/api/auth", authLimiter);
 // ======================================
 // Static Uploads
 // ======================================
+
 app.use(
   "/uploads",
   express.static(path.join(__dirname, "uploads"), {
@@ -203,6 +255,24 @@ app.use(
     maxAge: "1d",
   }),
 );
+
+// ======================================
+// Authentication Web Pages
+// ======================================
+
+app.get("/register", (req, res) => {
+  return res.render("auth/register", {
+    title: "Create Account | NexaCore",
+    authPage: true,
+  });
+});
+
+app.get("/login", (req, res) => {
+  return res.render("auth/login", {
+    title: "Sign In | NexaCore",
+    authPage: true,
+  });
+});
 
 // ======================================
 // API Routes
@@ -276,14 +346,45 @@ app.use("/api/cohorts", cohortRoutes);
 
 app.use("/api/audit-logs", auditLogRoutes);
 
-app.use(
-  "/api/assessment-results",
-  assessmentResultRoutes,
-);
+app.use("/api/assessment-results", assessmentResultRoutes);
+
+// ======================================
+// Home Page
+// ======================================
+
+app.get("/", (req, res) => {
+  return res.render("home", {
+    title: "NexaCore",
+  });
+});
+
+// ======================================
+// Dashboard Page
+// ======================================
+//
+// IMPORTANT:
+// This is an EJS page, NOT an API route.
+//
+// Do not protect this route with the API
+// authentication middleware here.
+//
+
+app.get("/dashboard", (req, res) => {
+  console.log("\n======================================");
+  console.log("✅ DASHBOARD EJS ROUTE REACHED");
+  console.log("User Cookies:", req.cookies);
+  console.log("======================================\n");
+
+  return res.render("dashboard/index", {
+    title: "Dashboard | NexaCore",
+    layout: false,
+  });
+});
 
 // ======================================
 // Health Check
 // ======================================
+
 app.get("/health", (req, res) => {
   return res.status(200).json({
     success: true,
@@ -295,28 +396,28 @@ app.get("/health", (req, res) => {
 });
 
 // ======================================
-// API Root
-// ======================================
-app.get("/", (req, res) => {
-  return res.status(200).json({
-    success: true,
-    message: "Welcome to NexaCore API",
-  });
-});
-
-// ======================================
 // 404 Handler
 // ======================================
+
 app.use((req, res) => {
-  return res.status(404).json({
-    success: false,
-    message: "Route not found.",
+  // API requests should receive JSON
+  if (req.originalUrl.startsWith("/api")) {
+    return res.status(404).json({
+      success: false,
+      message: "Route not found.",
+    });
+  }
+
+  // Web requests should receive an EJS page
+  return res.status(404).render("404", {
+    title: "Page Not Found",
   });
 });
 
 // ======================================
 // Global Error Handler
 // ======================================
+
 app.use((err, req, res, next) => {
   console.error("======================================");
   console.error("❌ API ERROR");
@@ -329,6 +430,7 @@ app.use((err, req, res, next) => {
   // ------------------------------------
   // CORS Error
   // ------------------------------------
+
   if (err.message === "CORS origin not allowed.") {
     return res.status(403).json({
       success: false,
@@ -339,6 +441,7 @@ app.use((err, req, res, next) => {
   // ------------------------------------
   // JSON Parsing Error
   // ------------------------------------
+
   if (err instanceof SyntaxError && err.status === 400) {
     return res.status(400).json({
       success: false,
@@ -349,6 +452,7 @@ app.use((err, req, res, next) => {
   // ------------------------------------
   // Multer Error
   // ------------------------------------
+
   if (err.name === "MulterError") {
     return res.status(400).json({
       success: false,
@@ -359,6 +463,7 @@ app.use((err, req, res, next) => {
   // ------------------------------------
   // Development
   // ------------------------------------
+
   if (NODE_ENV !== "production") {
     return res.status(err.statusCode || 500).json({
       success: false,
@@ -370,13 +475,17 @@ app.use((err, req, res, next) => {
   // ------------------------------------
   // Production
   // ------------------------------------
+
   return res.status(err.statusCode || 500).json({
     success: false,
-    message: err.statusCode ? err.message : "Internal server error.",
+    message: err.statusCode
+      ? err.message
+      : "Internal server error.",
   });
 });
 
 // ======================================
 // Export
 // ======================================
+
 module.exports = app;

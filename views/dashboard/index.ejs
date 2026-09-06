@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>NexaCore Dashboard</title>
+
+    <link rel="stylesheet" href="/css/dashboard.css" />
+  </head>
+
+  <body>
+    <!-- ======================================
+         DASHBOARD
+    ======================================= -->
+
+    <div class="dashboard">
+      <!-- ==================================
+             SIDEBAR
+        =================================== -->
+
+      <aside class="sidebar" id="sidebar">
+        <!-- Brand -->
+
+        <div class="sidebar-brand">
+          <div class="brand-mark">N</div>
+
+          <div class="brand-text">
+            <strong> Nexa<span>Core</span> </strong>
+
+            <small> Learn. Build. Grow. </small>
+          </div>
+        </div>
+
+        <!-- Navigation -->
+
+        <nav class="sidebar-nav">
+          <p class="nav-label">MAIN</p>
+
+          <a href="/dashboard" class="nav-item active">
+            <span class="nav-icon">⌂</span>
+            <span>Dashboard</span>
+          </a>
+
+          <a href="/courses" class="nav-item">
+            <span class="nav-icon">▣</span>
+            <span>My Courses</span>
+          </a>
+
+          <a href="/assessments" class="nav-item">
+            <span class="nav-icon">✓</span>
+            <span>Assessments</span>
+          </a>
+
+          <a href="/assignments" class="nav-item">
+            <span class="nav-icon">▤</span>
+            <span>Assignments</span>
+          </a>
+
+          <a href="/live-classes" class="nav-item">
+            <span class="nav-icon">◉</span>
+            <span>Live Classes</span>
+          </a>
+
+          <p class="nav-label">PERSONAL</p>
+
+          <a href="/messages" class="nav-item">
+            <span class="nav-icon">✉</span>
+            <span>Messages</span>
+            <span class="nav-badge">0</span>
+          </a>
+
+          <a href="/certificates" class="nav-item">
+            <span class="nav-icon">◇</span>
+            <span>Certificates</span>
+          </a>
+
+          <a href="/wallet" class="nav-item">
+            <span class="nav-icon">₦</span>
+            <span>Wallet</span>
+          </a>
+
+          <p class="nav-label">ACCOUNT</p>
+
+          <a href="/notifications" class="nav-item">
+            <span class="nav-icon">♢</span>
+            <span>Notifications</span>
+          </a>
+
+          <a href="/profile" class="nav-item">
+            <span class="nav-icon">◎</span>
+            <span>Profile</span>
+          </a>
+        </nav>
+
+        <!-- Sidebar Bottom -->
+
+        <div class="sidebar-bottom">
+          <button type="button" id="logoutButton" class="logout-button">
+            <span class="nav-icon"> ↪ </span>
+
+            <span> Logout </span>
+          </button>
+        </div>
+      </aside>
+
+      <!-- ==================================
+             MAIN AREA
+        =================================== -->
+
+      <main class="dashboard-main">
+        <!-- ==================================
+                 TOP BAR
+            =================================== -->
+
+        <header class="topbar">
+          <button
+            type="button"
+            id="sidebarToggle"
+            class="sidebar-toggle"
+            aria-label="Open navigation"
+          >
+            ☰
+          </button>
+
+          <div class="topbar-search">
+            <span> ⌕ </span>
+
+            <input type="search" placeholder="Search NexaCore..." />
+          </div>
+
+          <div class="topbar-actions">
+            <button
+              type="button"
+              class="topbar-icon"
+              aria-label="Notifications"
+            >
+              ♢
+            </button>
+
+            <div class="user-menu">
+              <div class="user-avatar">
+                <span id="userInitials"> N </span>
+              </div>
+
+              <div class="user-info">
+                <strong id="userName"> NexaCore User </strong>
+
+                <small id="userRole"> Student </small>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <!-- ==================================
+                 CONTENT
+            =================================== -->
+
+        <section class="dashboard-content">
+          <!-- Welcome -->
+
+          <div class="welcome-section">
+            <div>
+              <p class="welcome-label">YOUR LEARNING SPACE</p>
+
+              <h1>
+                Welcome back,
+                <span id="welcomeName"> Student </span>.
+              </h1>
+
+              <p class="welcome-description">
+                Continue your learning journey and keep building your future.
+              </p>
+            </div>
+
+            <a href="/courses" class="primary-button"> Explore Courses </a>
+          </div>
+
+          <!-- ==================================
+                     STATISTICS
+                =================================== -->
+
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-icon">▣</div>
+
+              <div>
+                <span> Enrolled Courses </span>
+
+                <strong> 0 </strong>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon">✓</div>
+
+              <div>
+                <span> Completed Courses </span>
+
+                <strong> 0 </strong>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon">◷</div>
+
+              <div>
+                <span> Learning Hours </span>
+
+                <strong> 0 </strong>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon">◇</div>
+
+              <div>
+                <span> Certificates </span>
+
+                <strong> 0 </strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- ==================================
+                     DASHBOARD GRID
+                =================================== -->
+
+          <div class="dashboard-grid">
+            <!-- Continue Learning -->
+
+            <div class="dashboard-card continue-card">
+              <div class="card-header">
+                <div>
+                  <p>LEARNING</p>
+
+                  <h2>Continue Learning</h2>
+                </div>
+
+                <a href="/courses"> View all </a>
+              </div>
+
+              <div class="empty-state">
+                <div class="empty-icon">▣</div>
+
+                <h3>No courses yet</h3>
+
+                <p>Enroll in a course to begin your learning journey.</p>
+
+                <a href="/courses" class="secondary-button"> Browse Courses </a>
+              </div>
+            </div>
+
+            <!-- Quick Actions -->
+
+            <div class="dashboard-card">
+              <div class="card-header">
+                <div>
+                  <p>QUICK ACCESS</p>
+
+                  <h2>Quick Actions</h2>
+                </div>
+              </div>
+
+              <div class="quick-actions">
+                <a href="/courses">
+                  <span>▣</span>
+                  <strong> Browse Courses </strong>
+                </a>
+
+                <a href="/assessments">
+                  <span>✓</span>
+                  <strong> Take Assessment </strong>
+                </a>
+
+                <a href="/live-classes">
+                  <span>◉</span>
+                  <strong> Join Live Class </strong>
+                </a>
+
+                <a href="/profile">
+                  <span>◎</span>
+                  <strong> Edit Profile </strong>
+                </a>
+              </div>
+            </div>
+
+            <!-- Recent Activity -->
+
+            <div class="dashboard-card">
+              <div class="card-header">
+                <div>
+                  <p>ACTIVITY</p>
+
+                  <h2>Recent Activity</h2>
+                </div>
+              </div>
+
+              <div class="empty-state small">
+                <div class="empty-icon">◷</div>
+
+                <p>Your recent activity will appear here.</p>
+              </div>
+            </div>
+
+            <!-- Upcoming Classes -->
+
+            <div class="dashboard-card">
+              <div class="card-header">
+                <div>
+                  <p>SCHEDULE</p>
+
+                  <h2>Upcoming Classes</h2>
+                </div>
+
+                <a href="/live-classes"> View all </a>
+              </div>
+
+              <div class="empty-state small">
+                <div class="empty-icon">◉</div>
+
+                <p>You have no upcoming classes.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- ======================================
+         JAVASCRIPT
+    ======================================= -->
+
+    <script src="/js/dashboard.js"></script>
+  </body>
+</html>

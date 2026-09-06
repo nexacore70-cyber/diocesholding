@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0"
+    />
+
+    <meta
+      name="description"
+      content="NexaCore - Learn, Build and Grow."
+    />
+
+    <title><%= title || "NexaCore" %></title>
+
+    <link
+      rel="stylesheet"
+      href="/css/style.css"
+    >
+
+    <% if (typeof authPage !== "undefined" && authPage) { %>
+
+      <link
+        rel="stylesheet"
+        href="/css/auth.css"
+      >
+
+    <% } %>
+
+    <% if (typeof dashboardPage !== "undefined" && dashboardPage) { %>
+
+      <link
+        rel="stylesheet"
+        href="/css/dashboard.css"
+      >
+
+    <% } %>
+
+  </head>
+
+  <body>
+
+    <% if (
+      typeof dashboardPage === "undefined" ||
+      !dashboardPage
+    ) { %>
+
+      <%- include("../partials/navbar") %>
+
+    <% } %>
+
+
+    <main>
+
+      <%- body %>
+
+    </main>
+
+
+    <% if (
+      typeof dashboardPage === "undefined" ||
+      !dashboardPage
+    ) { %>
+
+      <%- include("../partials/footer") %>
+
+    <% } %>
+
+
+    <% if (
+      typeof dashboardPage === "undefined" ||
+      !dashboardPage
+    ) { %>
+
+      <script src="/js/main.js"></script>
+
+    <% } %>
+
+
+    <% if (
+      typeof dashboardPage !== "undefined" &&
+      dashboardPage
+    ) { %>
+
+      <script src="/js/dashboard.js"></script>
+
+    <% } %>
+
+  </body>
+</html>

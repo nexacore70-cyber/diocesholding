@@ -72,10 +72,6 @@ const isValidJwtPayload = (decoded) => {
 // ======================================
 // Check Password Change
 // ======================================
-//
-// Invalidates tokens issued before the user's
-// password was changed.
-//
 
 const isTokenIssuedBeforePasswordChange = (decoded, user) => {
   if (!decoded?.iat) {
@@ -100,11 +96,6 @@ const isTokenIssuedBeforePasswordChange = (decoded, user) => {
 // ======================================
 // Update Last Seen
 // ======================================
-//
-// Do not update MongoDB on every request.
-// Last seen is updated at most once every
-// five minutes.
-//
 
 const updateLastSeen = async (user) => {
   try {
@@ -134,8 +125,6 @@ const updateLastSeen = async (user) => {
 
     user.lastSeen = now;
   } catch (error) {
-    // Last-seen failure must never prevent
-    // an otherwise valid request.
     console.error("Last Seen Update Error:", error.message);
   }
 };
@@ -151,7 +140,9 @@ const protect = async (req, res, next) => {
     // ======================================
 
     if (!validateJwtConfiguration()) {
-      console.error("Authentication Error: JWT_SECRET is missing or too weak.");
+      console.error(
+        "Authentication Error: JWT_SECRET is missing or too weak.",
+      );
 
       return res.status(500).json({
         success: false,
@@ -160,29 +151,42 @@ const protect = async (req, res, next) => {
     }
 
     // ======================================
-    // Get Authorization Header
+    // Get Authentication Token
     // ======================================
+
+    let token = null;
+
+    // --------------------------------------
+    // Check Authorization Header
+    // --------------------------------------
 
     const authHeader = req.headers.authorization;
 
-    if (!authHeader || typeof authHeader !== "string") {
-      return authenticationError(res);
+    if (authHeader && typeof authHeader === "string") {
+      const parts = authHeader.trim().split(/\s+/);
+
+      if (
+        parts.length === 2 &&
+        parts[0].toLowerCase() === "bearer"
+      ) {
+        token = parts[1]?.trim();
+      }
     }
 
-    // ======================================
-    // Validate Bearer Token
-    // ======================================
+    // --------------------------------------
+    // Check HTTP-Only Cookie
+    // --------------------------------------
 
-    const parts = authHeader.trim().split(/\s+/);
-
-    if (parts.length !== 2 || parts[0].toLowerCase() !== "bearer") {
-      return authenticationError(res);
+    if (!token && req.cookies?.token) {
+      token = req.cookies.token;
     }
 
-    const token = parts[1]?.trim();
+    // --------------------------------------
+    // No Token
+    // --------------------------------------
 
     if (!token) {
-      return authenticationError(res, "Authentication token is missing.");
+      return authenticationError(res);
     }
 
     // ======================================
@@ -197,11 +201,17 @@ const protect = async (req, res, next) => {
       });
     } catch (error) {
       if (error.name === "TokenExpiredError") {
-        return authenticationError(res, "Authentication token has expired.");
+        return authenticationError(
+          res,
+          "Authentication token has expired.",
+        );
       }
 
       if (error.name === "JsonWebTokenError") {
-        return authenticationError(res, "Invalid authentication token.");
+        return authenticationError(
+          res,
+          "Invalid authentication token.",
+        );
       }
 
       if (error.name === "NotBeforeError") {
@@ -211,7 +221,10 @@ const protect = async (req, res, next) => {
         );
       }
 
-      return authenticationError(res, "Authentication failed.");
+      return authenticationError(
+        res,
+        "Authentication failed.",
+      );
     }
 
     // ======================================
@@ -219,16 +232,15 @@ const protect = async (req, res, next) => {
     // ======================================
 
     if (!isValidJwtPayload(decoded)) {
-      return authenticationError(res, "Invalid authentication token.");
+      return authenticationError(
+        res,
+        "Invalid authentication token.",
+      );
     }
 
     // ======================================
     // Find User
     // ======================================
-    //
-    // passwordChangedAt is explicitly selected
-    // because the User schema has select: false.
-    //
 
     const user = await User.findOne({
       _id: decoded.id,
@@ -240,7 +252,10 @@ const protect = async (req, res, next) => {
     // ======================================
 
     if (!user) {
-      return authenticationError(res, "User account not found.");
+      return authenticationError(
+        res,
+        "User account not found.",
+      );
     }
 
     // ======================================
@@ -259,19 +274,31 @@ const protect = async (req, res, next) => {
     // ======================================
 
     if (user.status === "banned") {
-      return accountError(res, "Your account has been banned.");
+      return accountError(
+        res,
+        "Your account has been banned.",
+      );
     }
 
     if (user.status === "suspended") {
-      return accountError(res, "Your account has been suspended.");
+      return accountError(
+        res,
+        "Your account has been suspended.",
+      );
     }
 
     if (user.status === "pending") {
-      return accountError(res, "Your account is pending activation.");
+      return accountError(
+        res,
+        "Your account is pending activation.",
+      );
     }
 
     if (user.status !== "active") {
-      return accountError(res, "Your account is not active.");
+      return accountError(
+        res,
+        "Your account is not active.",
+      );
     }
 
     // ======================================
@@ -279,7 +306,10 @@ const protect = async (req, res, next) => {
     // ======================================
 
     if (user.isActive !== true) {
-      return accountError(res, "Your account has been deactivated.");
+      return accountError(
+        res,
+        "Your account has been deactivated.",
+      );
     }
 
     // ======================================
@@ -287,16 +317,15 @@ const protect = async (req, res, next) => {
     // ======================================
 
     if (user.deletedAt) {
-      return accountError(res, "This account is no longer active.");
+      return accountError(
+        res,
+        "This account is no longer active.",
+      );
     }
 
     // ======================================
     // Validate Roles
     // ======================================
-    //
-    // Authorization middleware will determine
-    // whether the user has permission.
-    //
 
     if (!Array.isArray(user.roles)) {
       user.roles = [];
@@ -320,7 +349,10 @@ const protect = async (req, res, next) => {
 
     return next();
   } catch (error) {
-    console.error("Authentication Middleware Error:", error);
+    console.error(
+      "Authentication Middleware Error:",
+      error,
+    );
 
     // ======================================
     // MongoDB Errors
@@ -332,7 +364,8 @@ const protect = async (req, res, next) => {
     ) {
       return res.status(503).json({
         success: false,
-        message: "Authentication service is temporarily unavailable.",
+        message:
+          "Authentication service is temporarily unavailable.",
       });
     }
 
@@ -341,7 +374,10 @@ const protect = async (req, res, next) => {
     // ======================================
 
     if (error.name === "CastError") {
-      return authenticationError(res, "Invalid authentication credentials.");
+      return authenticationError(
+        res,
+        "Invalid authentication credentials.",
+      );
     }
 
     // ======================================
